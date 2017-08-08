@@ -10,12 +10,13 @@ type expr =
     | Unt
     | Aray of (expr list)
     | Lst of (expr list)
-    | Aray_field of expr * expr
-    | Lst_cons of expr * expr
+    | Op of string * (expr list)
+    (* | Aray_field of expr * expr
+    | Lst_cons of expr * expr *)
     | Bool of bool
     | Tuple of (expr list)
     | Record of ((string * expr) list)
-    | Negb of expr
+    (* | Negb of expr
     | Ando of expr * expr
     | Oro of expr * expr
     | Negi of expr
@@ -31,7 +32,7 @@ type expr =
     | LT of expr * expr
     | GT of expr * expr
     | LE of expr * expr
-    | GE of expr * expr
+    | GE of expr * expr *)
     | IF of expr * expr * (expr option)
     | While of expr * expr
     | For of string * expr * expr * expr
@@ -40,7 +41,7 @@ type expr =
     | Match of expr * ((pattern * expr) list)
     | With of expr * ((string * expr) list)
     | Constr of string * (expr option)
-    | Apply of string * (expr list)
+    (* | Apply of string * (expr list) *)
 and pattern =
       Pat_Symbol of string
     | Pat_Int of int
@@ -94,8 +95,32 @@ let rec str_expr e =
   | Unt -> "()"
   | Aray pel_list -> "[|" ^ (List.fold_left (fun s pel -> s^";"^(str_expr pel)) "" pel_list) ^ "|]"
   | Lst pel_list -> "[" ^ (List.fold_left (fun s pel -> s^";"^(str_expr pel)) "" pel_list) ^ "]"
-  | Aray_field (pel1, pel2) -> (str_expr pel1)^"["^(str_expr pel2)^"]"
-  | Lst_cons (e1, e2) ->  (str_expr e1)^" :: "^(str_expr e2)
+  | Op (op, pel_list) -> begin
+        match op, pel_list with
+        | "[]",[pel1; pel2] -> (str_expr pel1)^"["^(str_expr pel2)^"]"
+        | "::",[e1; e2] -> (str_expr e1)^" :: "^(str_expr e2)
+        | "!",[pel1] -> "(! "^(str_expr pel1)^")"
+        | "&&",[pel1; pel2] -> "("^(str_expr pel1)^"&&"^(str_expr pel2)^")"
+        | "||",[pel1; pel2] -> "("^(str_expr pel1)^"||"^(str_expr pel2)^")"
+        | "-",[pel1] -> "(- "^(str_expr pel1)^")"
+        | "-.",[pel1; pel2] -> "(-. "^(str_expr pel1)^")"
+        | "+", [pel1; pel2] -> "("^(str_expr pel1)^"+"^(str_expr pel2)^")"
+        | "+.", [pel1; pel2] -> "("^(str_expr pel1)^"+."^(str_expr pel2)^")"
+        | "-",[pel1; pel2] -> "("^(str_expr pel1)^"-"^(str_expr pel2)^")"
+        | "-.",[pel1; pel2] -> "("^(str_expr pel1)^"-."^(str_expr pel2)^")"
+        | "*",[pel1; pel2] -> "("^(str_expr pel1)^"*"^(str_expr pel2)^")"
+        | "*.",[pel1; pel2] -> "("^(str_expr pel1)^"*."^(str_expr pel2)^")"
+        | "=",[pel1; pel2] -> "("^(str_expr pel1)^"="^(str_expr pel2)^")"
+        | "!=",[pel1; pel2] -> "("^(str_expr pel1)^"!="^(str_expr pel2)^")"
+        | "<",[pel1; pel2] -> "("^(str_expr pel1)^"<"^(str_expr pel2)^")"
+        | "<=",[pel1; pel2] -> "("^(str_expr pel1)^"<="^(str_expr pel2)^")"
+        | ">",[pel1; pel2] -> "("^(str_expr pel1)^">"^(str_expr pel2)^")"
+        | ">=",[pel1; pel2] -> "("^(str_expr pel1)^">="^(str_expr pel2)^")"
+        | str, _ -> 
+            let tmp_str = ref (str) in
+            List.iter (fun pel->tmp_str:= !tmp_str^" "^(str_expr pel)) pel_list;
+            !tmp_str
+    end
   | Bool b -> string_of_bool b
   | Tuple pel_list ->
       let tmp_str = ref "(" in
@@ -108,23 +133,6 @@ let rec str_expr e =
       List.iter (fun (str, pel) -> tmp_str := !tmp_str^str^"="^(str_expr pel)^";") (str_pel_list);
       tmp_str := !tmp_str ^ "}";
       !tmp_str
-  | Negb pel1 -> "(! "^(str_expr pel1)^")"
-  | Ando (pel1, pel2) -> "("^(str_expr pel1)^"&&"^(str_expr pel2)^")"
-  | Oro (pel1, pel2) -> "("^(str_expr pel1)^"||"^(str_expr pel2)^")"
-  | Negi pel1 -> "(- "^(str_expr pel1)^")"
-  | Negf pel1 -> "(-. "^(str_expr pel1)^")"
-  | Add (pel1, pel2) -> "("^(str_expr pel1)^"+"^(str_expr pel2)^")"
-  | AddDot (pel1, pel2) -> "("^(str_expr pel1)^"+."^(str_expr pel2)^")"
-  | Minus (pel1, pel2) -> "("^(str_expr pel1)^"-"^(str_expr pel2)^")"
-  | MinusDot (pel1, pel2) -> "("^(str_expr pel1)^"-."^(str_expr pel2)^")"
-  | Mult (pel1, pel2) -> "("^(str_expr pel1)^"*"^(str_expr pel2)^")"
-  | MultDot (pel1, pel2) -> "("^(str_expr pel1)^"*."^(str_expr pel2)^")"
-  | Equal (pel1, pel2) -> "("^(str_expr pel1)^"="^(str_expr pel2)^")"
-  | Non_Equal (pel1, pel2) -> "("^(str_expr pel1)^"!="^(str_expr pel2)^")"
-  | LT (pel1, pel2) -> "("^(str_expr pel1)^"<"^(str_expr pel2)^")"
-  | LE (pel1, pel2) -> "("^(str_expr pel1)^"<="^(str_expr pel2)^")"
-  | GT (pel1, pel2) -> "("^(str_expr pel1)^">"^(str_expr pel2)^")"
-  | GE (pel1, pel2) -> "("^(str_expr pel1)^">="^(str_expr pel2)^")"
   | IF (pel1, pel2, opel3) -> begin
           match opel3 with
           | None -> "if "^(str_expr pel1)^" then ("^(str_expr pel2)^")"
@@ -147,10 +155,7 @@ let rec str_expr e =
       !tmp_str
   | Constr (str, None) -> str
   | Constr (str, Some pel1) -> str^" "^(str_expr pel1)
-  | Apply (str, pel_list) -> 
-      let tmp_str = ref (str) in
-      List.iter (fun pel->tmp_str:= !tmp_str^" "^(str_expr pel)) pel_list;
-      !tmp_str
+      
 and str_pat pat = 
     match pat with
     | Pat_Symbol str -> str
@@ -211,12 +216,13 @@ let rec pexprl_to_expr pel =
   | PUnt -> Unt
   | PAray pel -> Aray (List.map (fun pe -> pexprl_to_expr pe) pel)
   | PLst pel -> Lst (List.map (fun pe -> pexprl_to_expr pe) pel)
-  | PAray_Field (pel1, pel2) -> Aray_field (pexprl_to_expr pel1, pexprl_to_expr pel2)
-  | PLst_Cons (pel1, pel2) -> Lst_cons (pexprl_to_expr pel1, pexprl_to_expr pel2)
+  | POp (op, pel_list) -> Op (op, List.map (fun pel->pexprl_to_expr pel) pel_list)
+  (* | PAray_Field (pel1, pel2) -> Aray_field (pexprl_to_expr pel1, pexprl_to_expr pel2)
+  | PLst_Cons (pel1, pel2) -> Lst_cons (pexprl_to_expr pel1, pexprl_to_expr pel2) *)
   | PBool b -> Bool b
   | PTuple pels -> Tuple (List.map (fun pel->pexprl_to_expr pel) pels)
   | PRecord str_pel_list -> Record (List.map (fun (str, pel) -> str, pexprl_to_expr pel) str_pel_list)
-  | PNegb pel1 -> Negb (pexprl_to_expr pel1)
+  (* | PNegb pel1 -> Negb (pexprl_to_expr pel1)
   | PAndo (pel1, pel2) -> Ando (pexprl_to_expr pel1, pexprl_to_expr pel2)
   | POro (pel1, pel2) -> Oro (pexprl_to_expr pel1, pexprl_to_expr pel2)
   | PNegi pel1 -> pexprl_to_expr pel1
@@ -232,7 +238,7 @@ let rec pexprl_to_expr pel =
   | PLT (pel1, pel2) -> LT (pexprl_to_expr pel1, pexprl_to_expr pel2)
   | PLE (pel1, pel2) -> LE (pexprl_to_expr pel1, pexprl_to_expr pel2)
   | PGT (pel1, pel2) -> GT (pexprl_to_expr pel1, pexprl_to_expr pel2)
-  | PGE (pel1, pel2) -> GE (pexprl_to_expr pel1, pexprl_to_expr pel2)
+  | PGE (pel1, pel2) -> GE (pexprl_to_expr pel1, pexprl_to_expr pel2) *)
   | PIF (pel1, pel2, opel3) -> IF (pexprl_to_expr pel1, pexprl_to_expr pel2, Options.bind pexprl_to_expr opel3)
   | PWhile (pel1, pel2) -> While (pexprl_to_expr pel1, pexprl_to_expr pel2)
   | PFor (str, pel1, pel2, pel3) -> For (str, pexprl_to_expr pel1, pexprl_to_expr pel2, pexprl_to_expr pel3)
@@ -242,7 +248,7 @@ let rec pexprl_to_expr pel =
   | PWith (pel1, str_pel_list) -> With (pexprl_to_expr pel1, List.map (fun (str, pel) -> str, pexprl_to_expr pel) str_pel_list)
   | PConstr (PConstr_basic str) -> Constr (str, None)
   | PConstr (PConstr_compound (str, pel1)) -> Constr (str, Some (pexprl_to_expr pel1))
-  | PApply (str, pels) -> Apply (str, List.map (fun pel -> pexprl_to_expr pel) pels)
+  (* | PApply (str, pels) -> Apply (str, List.map (fun pel -> pexprl_to_expr pel) pels) *)
 and ppatl_to_pattern ppatl = 
   match ppatl.ppat with
   | PPat_Symbol str -> Pat_Symbol str

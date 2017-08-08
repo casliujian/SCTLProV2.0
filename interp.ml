@@ -202,120 +202,136 @@ and evaluate expr ctx runtime modul =
     | Let _ -> raise (Evaluation_error "should not bind variables in the last expression") 
     | Aray ea -> VAray (List.map (fun e -> evaluate e ctx runtime modul) ea)
     | Lst ea -> VLst (List.map (fun e -> evaluate e ctx runtime modul) ea)
-    | Aray_field (e1, e2) -> 
-        let v1 = evaluate e1 ctx runtime modul 
-        and v2 = evaluate e2 ctx runtime modul in begin
-            match v1,v2 with
-            | VAray va, VInt i -> List.nth va i
-            | _ -> raise (Evaluation_error ((str_value v1)^" should be an array value, and "^(str_value v2)^" should be an integer value."))
-        end
-    | Lst_cons (e1, e2) ->
-        let v1 = evaluate e1 ctx runtime modul
-        and v2 = evaluate e2 ctx runtime modul in begin
-            match v2 with
-            | VLst vl -> VLst (v1::vl)    
-            | _ -> raise (Evaluation_error ((str_value v2)^" should be a list value."))
+    | Op (op, el) -> begin
+            match op, el with
+            | "[]", [e1; e2] -> 
+                let v1 = evaluate e1 ctx runtime modul 
+                and v2 = evaluate e2 ctx runtime modul in begin
+                    match v1,v2 with
+                    | VAray va, VInt i -> List.nth va i
+                    | _ -> raise (Evaluation_error ((str_value v1)^" should be an array value, and "^(str_value v2)^" should be an integer value."))
+                end
+            | "::", [e1; e2] ->
+                let v1 = evaluate e1 ctx runtime modul
+                and v2 = evaluate e2 ctx runtime modul in begin
+                    match v2 with
+                    | VLst vl -> VLst (v1::vl)    
+                    | _ -> raise (Evaluation_error ((str_value v2)^" should be a list value."))
+                end
+            | "!", [e1] ->
+                let v1 = evaluate e1 ctx runtime modul in begin
+                    match v1 with
+                    | VBool b -> VBool (not b)
+                    | _ -> raise (Evaluation_error ((str_value v1)^" is not a bool value."))    
+                end
+            | "&&", [e1; e2] -> 
+                let v1 = evaluate e1 ctx runtime modul 
+                and v2 = evaluate e2 ctx runtime modul in begin
+                    match v1, v2 with
+                    | VBool b1, VBool b2 -> VBool (b1 && b2)
+                    | _ -> raise (Evaluation_error "can not evaluate to bool value.")    
+                end
+            | "||", [e1; e2] ->
+                let v1 = evaluate e1 ctx runtime modul 
+                and v2 = evaluate e2 ctx runtime modul in begin
+                    match v1, v2 with
+                    | VBool b1, VBool b2 -> VBool (b1 || b2)
+                    | _ -> raise (Evaluation_error "can not evaluate to bool value.")    
+                end
+            | "-", [e1] ->
+                let v1 = evaluate e1 ctx runtime modul in begin
+                    match v1 with
+                    | VInt i -> VInt (-i)
+                    | _ -> raise (Evaluation_error ((str_value v1)^" is not a integer value."))    
+                end
+            | "-.", [e1] -> 
+                let v1 = evaluate e1 ctx runtime modul in begin
+                    match v1 with
+                    | VFloat f -> VFloat (0. -. f)
+                    | _ -> raise (Evaluation_error ((str_value v1)^" is not a float value."))    
+                end
+            | "+", [e1; e2] ->
+                let v1 = evaluate e1 ctx runtime modul 
+                and v2 = evaluate e2 ctx runtime modul in begin
+                    match v1, v2 with
+                    | VInt i1, VInt i2 -> VInt (i1+i2)
+                    | _ -> raise (Evaluation_error "can not evaluate to integer value.")    
+                end
+            | "+.", [e1; e2] ->
+                let v1 = evaluate e1 ctx runtime modul 
+                and v2 = evaluate e2 ctx runtime modul in begin
+                    match v1, v2 with
+                    | VFloat f1, VFloat f2 -> VFloat (f1+.f2)
+                    | _ -> raise (Evaluation_error "can not evaluate to integer value.")    
+                end
+            | "-", [e1; e2] ->
+                let v1 = evaluate e1 ctx runtime modul 
+                and v2 = evaluate e2 ctx runtime modul in begin
+                    match v1, v2 with
+                    | VInt i1, VInt i2 -> VInt (i1-i2)
+                    | _ -> raise (Evaluation_error "can not evaluate to integer value.")    
+                end
+            | "-.", [e1; e2] ->
+                let v1 = evaluate e1 ctx runtime modul 
+                and v2 = evaluate e2 ctx runtime modul in begin
+                    match v1, v2 with
+                    | VFloat f1, VFloat f2 -> VFloat (f1-.f2)
+                    | _ -> raise (Evaluation_error "can not evaluate to float value.")    
+                end
+            | "*", [e1; e2] ->
+                let v1 = evaluate e1 ctx runtime modul 
+                and v2 = evaluate e2 ctx runtime modul in begin
+                    match v1, v2 with
+                    | VInt i1, VInt i2 -> VInt (i1*i2)
+                    | _ -> raise (Evaluation_error "can not evaluate to integer value.")    
+                end
+            | "*.", [e1; e2] ->
+                let v1 = evaluate e1 ctx runtime modul 
+                and v2 = evaluate e2 ctx runtime modul in begin
+                    match v1, v2 with
+                    | VFloat i1, VFloat i2 -> VFloat (i1*.i2)
+                    | _ -> raise (Evaluation_error "can not evaluate to integer value.")    
+                end
+            | "=", [e1; e2] ->
+                let v1 = evaluate e1 ctx runtime modul 
+                and v2 = evaluate e2 ctx runtime modul in
+                VBool (v1 = v2)
+            | "!=", [e1; e2] ->
+                let v1 = evaluate e1 ctx runtime modul 
+                and v2 = evaluate e2 ctx runtime modul in
+                VBool (v1 <> v2)
+            | "<", [e1; e2] ->
+                let v1 = evaluate e1 ctx runtime modul 
+                and v2 = evaluate e2 ctx runtime modul in
+                VBool (v1 < v2)
+            | "<=", [e1; e2] ->
+                let v1 = evaluate e1 ctx runtime modul 
+                and v2 = evaluate e2 ctx runtime modul in
+                VBool (v1 <= v2)
+            | ">", [e1; e2] ->
+                let v1 = evaluate e1 ctx runtime modul 
+                and v2 = evaluate e2 ctx runtime modul in
+                VBool (v1 > v2)
+            | ">=", [e1; e2] ->
+                let v1 = evaluate e1 ctx runtime modul 
+                and v2 = evaluate e2 ctx runtime modul in
+                VBool (v1 >= v2)
+            | str, es ->
+                let pats, e1 = find_function str runtime modul in
+                if List.length es <> List.length pats then 
+                    raise (Evaluation_error ("function "^str^" has "^(string_of_int (List.length pats))^" parameters, but is applied to "^(string_of_int (List.length es))^" arguments."))
+                else begin
+                    let ctx0 = ref [] in
+                    for i = 0 to List.length es - 1 do
+                        let e1 = List.nth es i in
+                        let ctx1, _ = get_matched_pattern (evaluate e1 ctx runtime modul) [(List.nth pats i, e1)] in
+                        ctx0 := ctx1 @ !ctx0
+                    done;
+                    evaluate e1 (!ctx0 @ ctx) runtime modul
+                end
         end
     | Tuple ea -> VTuple (List.map (fun e -> evaluate e ctx runtime modul) ea)
     | Record str_expr_array -> VRecord ((List.map (fun (str, expr) -> str, evaluate expr ctx runtime modul) str_expr_array))
-    | Negb e1 -> 
-        let v1 = evaluate e1 ctx runtime modul in begin
-            match v1 with
-            | VBool b -> VBool (not b)
-            | _ -> raise (Evaluation_error ((str_value v1)^" is not a bool value."))    
-        end
-    | Ando (e1, e2) -> 
-        let v1 = evaluate e1 ctx runtime modul 
-        and v2 = evaluate e2 ctx runtime modul in begin
-            match v1, v2 with
-            | VBool b1, VBool b2 -> VBool (b1 && b2)
-            | _ -> raise (Evaluation_error "can not evaluate to bool value.")    
-        end
-    | Oro (e1, e2) -> 
-        let v1 = evaluate e1 ctx runtime modul 
-        and v2 = evaluate e2 ctx runtime modul in begin
-            match v1, v2 with
-            | VBool b1, VBool b2 -> VBool (b1 || b2)
-            | _ -> raise (Evaluation_error "can not evaluate to bool value.")    
-        end
-    | Negi e1 -> 
-        let v1 = evaluate e1 ctx runtime modul in begin
-            match v1 with
-            | VInt i -> VInt (-i)
-            | _ -> raise (Evaluation_error ((str_value v1)^" is not a integer value."))    
-        end
-    | Negf e1 ->
-        let v1 = evaluate e1 ctx runtime modul in begin
-            match v1 with
-            | VFloat f -> VFloat (0. -. f)
-            | _ -> raise (Evaluation_error ((str_value v1)^" is not a float value."))    
-        end
-    | Add (e1, e2) -> 
-        let v1 = evaluate e1 ctx runtime modul 
-        and v2 = evaluate e2 ctx runtime modul in begin
-            match v1, v2 with
-            | VInt i1, VInt i2 -> VInt (i1+i2)
-            | _ -> raise (Evaluation_error "can not evaluate to integer value.")    
-        end
-    | AddDot (e1, e2) -> 
-        let v1 = evaluate e1 ctx runtime modul 
-        and v2 = evaluate e2 ctx runtime modul in begin
-            match v1, v2 with
-            | VFloat f1, VFloat f2 -> VFloat (f1+.f2)
-            | _ -> raise (Evaluation_error "can not evaluate to integer value.")    
-        end
-    | Minus (e1, e2) -> 
-        let v1 = evaluate e1 ctx runtime modul 
-        and v2 = evaluate e2 ctx runtime modul in begin
-            match v1, v2 with
-            | VInt i1, VInt i2 -> VInt (i1-i2)
-            | _ -> raise (Evaluation_error "can not evaluate to integer value.")    
-        end
-    | MinusDot (e1, e2) -> 
-        let v1 = evaluate e1 ctx runtime modul 
-        and v2 = evaluate e2 ctx runtime modul in begin
-            match v1, v2 with
-            | VFloat f1, VFloat f2 -> VFloat (f1-.f2)
-            | _ -> raise (Evaluation_error "can not evaluate to float value.")    
-        end
-    | Mult (e1, e2) -> 
-        let v1 = evaluate e1 ctx runtime modul 
-        and v2 = evaluate e2 ctx runtime modul in begin
-            match v1, v2 with
-            | VInt i1, VInt i2 -> VInt (i1*i2)
-            | _ -> raise (Evaluation_error "can not evaluate to integer value.")    
-        end
-    | MultDot (e1, e2) -> 
-        let v1 = evaluate e1 ctx runtime modul 
-        and v2 = evaluate e2 ctx runtime modul in begin
-            match v1, v2 with
-            | VFloat i1, VFloat i2 -> VFloat (i1*.i2)
-            | _ -> raise (Evaluation_error "can not evaluate to integer value.")    
-        end
-    | Equal (e1, e2) ->
-        let v1 = evaluate e1 ctx runtime modul 
-        and v2 = evaluate e2 ctx runtime modul in
-        VBool (v1 = v2)
-    | Non_Equal (e1, e2) ->
-        let v1 = evaluate e1 ctx runtime modul 
-        and v2 = evaluate e2 ctx runtime modul in
-        VBool (v1 <> v2)
-    | LT (e1, e2) ->
-        let v1 = evaluate e1 ctx runtime modul 
-        and v2 = evaluate e2 ctx runtime modul in
-        VBool (v1 < v2)
-    | LE (e1, e2) ->
-        let v1 = evaluate e1 ctx runtime modul 
-        and v2 = evaluate e2 ctx runtime modul in
-        VBool (v1 <= v2)
-    | GT (e1, e2) ->
-        let v1 = evaluate e1 ctx runtime modul 
-        and v2 = evaluate e2 ctx runtime modul in
-        VBool (v1 > v2)
-    | GE (e1, e2) ->
-        let v1 = evaluate e1 ctx runtime modul 
-        and v2 = evaluate e2 ctx runtime modul in
-        VBool (v1 >= v2)
     | IF (e1, e2, None) ->
         let v1 = evaluate e1 ctx runtime modul in
         if v1 = VBool true then
@@ -369,7 +385,7 @@ and evaluate expr ctx runtime modul =
                     | [str] -> modify_ctx ctx str (evaluate e2 ctx runtime modul); VUnt
                     | str::strs -> modify_ctx ctx str (modified_record_value (Refpairs.get_value ctx str) strs (evaluate e2 ctx runtime modul)); VUnt
                 end
-            | Aray_field (Symbol [s], e3) -> begin
+            | Op ("[]", [Symbol [s]; e3]) -> begin
                     if not (Pairs.key_exists ctx s) then
                         raise (Evaluation_error (s^" is not defined."));
                     match Refpairs.get_value ctx s with
@@ -399,19 +415,6 @@ and evaluate expr ctx runtime modul =
         end
     | Constr (str, None) -> VConstr (str, None)
     | Constr (str, Some e1) -> VConstr (str, Some (evaluate e1 ctx runtime modul))
-    | Apply (str, es) -> 
-        let pats, e1 = find_function str runtime modul in
-        if List.length es <> List.length pats then 
-            raise (Evaluation_error ("function "^str^" has "^(string_of_int (List.length pats))^" parameters, but is applied to "^(string_of_int (List.length es))^" arguments."))
-        else begin
-            let ctx0 = ref [] in
-            for i = 0 to List.length es - 1 do
-                let e1 = List.nth es i in
-                let ctx1, _ = get_matched_pattern (evaluate e1 ctx runtime modul) [(List.nth pats i, e1)] in
-                ctx0 := ctx1 @ !ctx0
-            done;
-            evaluate e1 (!ctx0 @ ctx) runtime modul
-        end
             
 let rec pfmll_to_fml pfmll runtime modul = 
   match pfmll.pfml with

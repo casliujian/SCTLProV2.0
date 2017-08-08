@@ -90,18 +90,39 @@ let rec str_pexprl pel =
                 | [str] -> str
                 | str::strs' -> str^"."^(str_strs strs') in
             str_strs str_list
-        (* | PLocal_Val (str, pel1) -> "val "^str^"="^(str_pexprl pel1)
-        | PLocal_Var (str, pel1) -> "var "^str^"="^(str_pexprl pel1) *)
         | PLet (ppatl, pel1) ->
             "let "^(str_ppatl ppatl)^" = "^(str_pexprl pel1)
-        (* | PDot (pel1, pel2) -> (str_pexprl pel1)^"."^(str_pexprl pel2) *)
         | PInt i -> (string_of_int i)
         | PFloat f -> (string_of_float f)
         | PUnt -> "()"
         | PAray pel_list -> "[|" ^ (List.fold_left (fun s pel -> s^";"^(str_pexprl pel)) "" pel_list) ^ "|]"
         | PLst pel_list -> "[" ^ (List.fold_left (fun s pel -> s^";"^(str_pexprl pel)) "" pel_list) ^ "]"
-        | PAray_Field (pel1, pel2) -> (str_pexprl pel1)^"["^(str_pexprl pel2)^"]"
-        | PLst_Cons (pel1, pel2) -> (str_pexprl pel1)^" :: "^(str_pexprl pel2)
+        | POp (op, pel_list) ->begin
+                match op, pel_list with
+                | "[]",[pel1; pel2] -> (str_pexprl pel1)^"["^(str_pexprl pel2)^"]"
+                | "::",[pel1; pel2] -> (str_pexprl pel1)^" :: "^(str_pexprl pel2)
+                | "!",[pel1] -> "(! "^(str_pexprl pel1)^")"
+                | "&&",[pel1; pel2] -> "("^(str_pexprl pel1)^"&&"^(str_pexprl pel2)^")"
+                | "||",[pel1; pel2] -> "("^(str_pexprl pel1)^"||"^(str_pexprl pel2)^")"
+                | "-",[pel1] -> "(- "^(str_pexprl pel1)^")"
+                | "-.",[pel1; pel2] -> "(-. "^(str_pexprl pel1)^")"
+                | "+", [pel1; pel2] -> "("^(str_pexprl pel1)^"+"^(str_pexprl pel2)^")"
+                | "+.", [pel1; pel2] -> "("^(str_pexprl pel1)^"+."^(str_pexprl pel2)^")"
+                | "-",[pel1; pel2] -> "("^(str_pexprl pel1)^"-"^(str_pexprl pel2)^")"
+                | "-.",[pel1; pel2] -> "("^(str_pexprl pel1)^"-."^(str_pexprl pel2)^")"
+                | "*",[pel1; pel2] -> "("^(str_pexprl pel1)^"*"^(str_pexprl pel2)^")"
+                | "*.",[pel1; pel2] -> "("^(str_pexprl pel1)^"*."^(str_pexprl pel2)^")"
+                | "=",[pel1; pel2] -> "("^(str_pexprl pel1)^"="^(str_pexprl pel2)^")"
+                | "!=",[pel1; pel2] -> "("^(str_pexprl pel1)^"!="^(str_pexprl pel2)^")"
+                | "<",[pel1; pel2] -> "("^(str_pexprl pel1)^"<"^(str_pexprl pel2)^")"
+                | "<=",[pel1; pel2] -> "("^(str_pexprl pel1)^"<="^(str_pexprl pel2)^")"
+                | ">",[pel1; pel2] -> "("^(str_pexprl pel1)^">"^(str_pexprl pel2)^")"
+                | ">=",[pel1; pel2] -> "("^(str_pexprl pel1)^">="^(str_pexprl pel2)^")"
+                | str, _ -> 
+                    let tmp_str = ref (str) in
+                    List.iter (fun pel->tmp_str:= !tmp_str^" "^(str_pexprl pel)) pel_list;
+                    !tmp_str
+            end
         | PBool b -> string_of_bool b
         | PTuple pel_list ->
             let tmp_str = ref "(" in
@@ -114,23 +135,6 @@ let rec str_pexprl pel =
             List.iter (fun (str, pel) -> tmp_str := !tmp_str^str^"="^(str_pexprl pel)^";") (str_pel_list);
             tmp_str := !tmp_str ^ "}";
             !tmp_str
-        | PNegb pel1 -> "(! "^(str_pexprl pel1)^")"
-        | PAndo (pel1, pel2) -> "("^(str_pexprl pel1)^"&&"^(str_pexprl pel2)^")"
-        | POro (pel1, pel2) -> "("^(str_pexprl pel1)^"||"^(str_pexprl pel2)^")"
-        | PNegi pel1 -> "(- "^(str_pexprl pel1)^")"
-        | PNegf pel1 -> "(-. "^(str_pexprl pel1)^")"
-        | PAdd (pel1, pel2) -> "("^(str_pexprl pel1)^"+"^(str_pexprl pel2)^")"
-        | PAddDot (pel1, pel2) -> "("^(str_pexprl pel1)^"+."^(str_pexprl pel2)^")"
-        | PMinus (pel1, pel2) -> "("^(str_pexprl pel1)^"-"^(str_pexprl pel2)^")"
-        | PMinusDot (pel1, pel2) -> "("^(str_pexprl pel1)^"-."^(str_pexprl pel2)^")"
-        | PMult (pel1, pel2) -> "("^(str_pexprl pel1)^"*"^(str_pexprl pel2)^")"
-        | PMultDot (pel1, pel2) -> "("^(str_pexprl pel1)^"*."^(str_pexprl pel2)^")"
-        | PEqual (pel1, pel2) -> "("^(str_pexprl pel1)^"="^(str_pexprl pel2)^")"
-        | PNon_Equal (pel1, pel2) -> "("^(str_pexprl pel1)^"!="^(str_pexprl pel2)^")"
-        | PLT (pel1, pel2) -> "("^(str_pexprl pel1)^"<"^(str_pexprl pel2)^")"
-        | PLE (pel1, pel2) -> "("^(str_pexprl pel1)^"<="^(str_pexprl pel2)^")"
-        | PGT (pel1, pel2) -> "("^(str_pexprl pel1)^">"^(str_pexprl pel2)^")"
-        | PGE (pel1, pel2) -> "("^(str_pexprl pel1)^">="^(str_pexprl pel2)^")"
         | PIF (pel1, pel2, opel3) -> begin
                 match opel3 with
                 | None -> "if "^(str_pexprl pel1)^" then ("^(str_pexprl pel2)^")"
@@ -153,10 +157,6 @@ let rec str_pexprl pel =
             !tmp_str
         | PConstr (PConstr_basic str) -> str
         | PConstr (PConstr_compound (str, pel1)) -> str^" "^(str_pexprl pel1)
-        | PApply (str, pel_list) -> 
-            let tmp_str = ref (str) in
-            List.iter (fun pel->tmp_str:= !tmp_str^" "^(str_pexprl pel)) pel_list;
-            !tmp_str
     in
     (str_pexpr (pel.pexpr))^":"^(str_ptyp (pel.ptyp))
 

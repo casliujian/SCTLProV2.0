@@ -56,41 +56,38 @@ type pexpr_loc = {
     pexpr: pexpr;
     mutable ptyp: ptyp;
     loc: location;
-    (*attri: attribute;*)
 }
 and pexpr = 
       PSymbol of string list
-    (* | PLocal_Val of string * pexpr_loc
-    | PLocal_Var of string * pexpr_loc *)
     | PLet of ppattern_loc * pexpr_loc
-    (* | PDot of pexpr_loc * pexpr_loc *)
     | PInt of int
     | PFloat of float
     | PUnt
     | PAray of (pexpr_loc list)
     | PLst of (pexpr_loc list)
-    | PAray_Field of pexpr_loc * pexpr_loc
-    | PLst_Cons of pexpr_loc * pexpr_loc
+    | POp of string * (pexpr_loc list)
+    (* | PAray_Field of pexpr_loc * pexpr_loc *)
+    (* | PLst_Cons of pexpr_loc * pexpr_loc *)
     | PBool of bool
     | PTuple of (pexpr_loc list)
     | PRecord of ((string * pexpr_loc) list)
-    | PNegb of pexpr_loc
-    | PAndo of pexpr_loc * pexpr_loc
-    | POro of pexpr_loc * pexpr_loc
-    | PNegi of pexpr_loc
-    | PNegf of pexpr_loc
-    | PAdd of pexpr_loc * pexpr_loc
-    | PAddDot of pexpr_loc * pexpr_loc
-    | PMinus of pexpr_loc * pexpr_loc
-    | PMinusDot of pexpr_loc * pexpr_loc
-    | PMult of pexpr_loc * pexpr_loc
-    | PMultDot of pexpr_loc * pexpr_loc
-    | PEqual of pexpr_loc * pexpr_loc
-    | PNon_Equal of pexpr_loc * pexpr_loc
-    | PLT of pexpr_loc * pexpr_loc
-    | PGT of pexpr_loc * pexpr_loc
-    | PLE of pexpr_loc * pexpr_loc
-    | PGE of pexpr_loc * pexpr_loc
+    (* | PNegb of pexpr_loc *)
+    (* | PAndo of pexpr_loc * pexpr_loc *)
+    (* | POro of pexpr_loc * pexpr_loc *)
+    (* | PNegi of pexpr_loc *)
+    (* | PNegf of pexpr_loc *)
+    (* | PAdd of pexpr_loc * pexpr_loc *)
+    (* | PAddDot of pexpr_loc * pexpr_loc *)
+    (* | PMinus of pexpr_loc * pexpr_loc *)
+    (* | PMinusDot of pexpr_loc * pexpr_loc *)
+    (* | PMult of pexpr_loc * pexpr_loc *)
+    (* | PMultDot of pexpr_loc * pexpr_loc *)
+    (* | PEqual of pexpr_loc * pexpr_loc *)
+    (* | PNon_Equal of pexpr_loc * pexpr_loc *)
+    (* | PLT of pexpr_loc * pexpr_loc *)
+    (* | PGT of pexpr_loc * pexpr_loc *)
+    (* | PLE of pexpr_loc * pexpr_loc *)
+    (* | PGE of pexpr_loc * pexpr_loc *)
     | PIF of pexpr_loc * pexpr_loc * (pexpr_loc option)
     | PWhile of pexpr_loc * pexpr_loc
     | PFor of string * pexpr_loc * pexpr_loc * pexpr_loc
@@ -99,7 +96,7 @@ and pexpr =
     | PMatch of pexpr_loc * ((ppattern_loc * pexpr_loc) list)
     | PWith of pexpr_loc * ((string * pexpr_loc) list)
     | PConstr of pconstr
-    | PApply of string * pexpr_loc list
+    (* | PApply of string * (pexpr_loc list) *)
 and ppattern_loc = {
     ppat: ppattern;
     mutable ptyp: ptyp;

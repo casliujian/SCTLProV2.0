@@ -530,17 +530,124 @@ let rec check_pel_type pel env tctx modul moduls =
         (* List.iter (fun (pel:pexpr_loc) -> pel.ptyp <- apply_env_to_ptyp new_env pel.ptyp) pel_list; *)
         let env2 = unify [pel.ptyp; PTLst ((List.hd pel_list).ptyp)] modul moduls in 
         (merge_env env2 new_env, tctx)
-  | PAray_Field (pel1, pel2) -> 
-    let env1, _ = check_pel_type pel1 env tctx modul moduls  in
-    (* let env2 = merge_env env1 env in *)
-    let env3, _ = check_pel_type pel2 env1 tctx modul moduls in
-    let env4 = unify [pel.ptyp; PTAray (pel2.ptyp)] modul moduls in
-    (merge_env env4 env3, tctx)
-  | PLst_Cons (pel1, pel2) ->
-    let env1,_ = check_pel_type pel1 env tctx modul moduls in
-    let env2,_ = check_pel_type pel2 env1 tctx modul moduls in
-    let env3 = unify [pel.ptyp; pel2.ptyp; PTLst (pel1.ptyp)] modul moduls in
-    (merge_env env3 env2, tctx)
+  | POp (op, pel_list) -> begin
+      match op, pel_list with
+      | "[]", [pel1; pel2] -> 
+        let env1, _ = check_pel_type pel1 env tctx modul moduls  in
+        (* let env2 = merge_env env1 env in *)
+        let env3, _ = check_pel_type pel2 env1 tctx modul moduls in
+        let env4 = unify [pel.ptyp; PTAray (pel2.ptyp)] modul moduls in
+        (merge_env env4 env3, tctx)
+      | "::", [pel1; pel2] -> 
+        let env1,_ = check_pel_type pel1 env tctx modul moduls in
+        let env2,_ = check_pel_type pel2 env1 tctx modul moduls in
+        let env3 = unify [pel.ptyp; pel2.ptyp; PTLst (pel1.ptyp)] modul moduls in
+        (merge_env env3 env2, tctx)
+      | "!", [pel1] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2 = unify [PTBool; pel1.ptyp; pel.ptyp] modul moduls in
+        (merge_env env2 env1, tctx)
+      | "&&", [pel1; pel2] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
+        let env3 = unify [PTBool; pel1.ptyp; pel2.ptyp; pel.ptyp] modul moduls in
+        (merge_env env3 env2, tctx)
+      | "||", [pel1; pel2] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
+        let env3 = unify [PTBool; pel1.ptyp; pel2.ptyp; pel.ptyp] modul moduls in
+        (merge_env env3 env2, tctx)
+      | "-", [pel1] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2 = unify [PTInt; pel1.ptyp; pel.ptyp] modul moduls in
+        (merge_env env2 env1, tctx)
+      | "-.", [pel1] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2 = unify [PTFloat; pel1.ptyp; pel.ptyp] modul moduls in
+        (merge_env env2 env1, tctx)
+      | "+", [pel1; pel2] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
+        let env3 = unify [PTInt; pel1.ptyp; pel2.ptyp; pel.ptyp] modul moduls in
+        (merge_env env3 env2, tctx)
+      | "+.", [pel1; pel2] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
+        let env3 = unify [PTFloat; pel1.ptyp; pel2.ptyp; pel.ptyp] modul moduls in
+        (merge_env env3 env2, tctx)
+      | "-", [pel1; pel2] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
+        let env3 = unify [PTInt; pel1.ptyp; pel2.ptyp; pel.ptyp] modul moduls in
+        (merge_env env3 env2, tctx)
+      | "-.", [pel1; pel2] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
+        let env3 = unify [PTFloat; pel1.ptyp; pel2.ptyp; pel.ptyp] modul moduls in
+        (merge_env env3 env2, tctx)
+      | "*", [pel1; pel2] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
+        let env3 = unify [PTInt; pel1.ptyp; pel2.ptyp; pel.ptyp] modul moduls in
+        (merge_env env3 env2, tctx)
+      | "*.", [pel1; pel2] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
+        let env3 = unify [PTFloat; pel1.ptyp; pel2.ptyp; pel.ptyp] modul moduls in
+        (merge_env env3 env2, tctx)
+      | "=", [pel1; pel2] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
+        let env3 = unify [pel1.ptyp; pel2.ptyp] modul moduls in
+        let env4 = unify [PTBool; pel.ptyp] modul moduls in
+        (merge_env (merge_env env3 env4) env2, tctx)
+      | "!=", [pel1; pel2] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
+        let env3 = unify [pel1.ptyp; pel2.ptyp] modul moduls in
+        let env4 = unify [PTBool; pel.ptyp] modul moduls in
+        (merge_env (merge_env env3 env4) env2, tctx)
+      | "<", [pel1; pel2] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
+        let env3 = unify [pel1.ptyp; pel2.ptyp] modul moduls in
+        let env4 = unify [PTBool; pel.ptyp] modul moduls in
+        (merge_env (merge_env env3 env4) env2, tctx)
+      | ">", [pel1; pel2] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
+        let env3 = unify [pel1.ptyp; pel2.ptyp] modul moduls in
+        let env4 = unify [PTBool; pel.ptyp] modul moduls in
+        (merge_env (merge_env env3 env4) env2, tctx)
+      | "<=", [pel1; pel2] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
+        let env3 = unify [pel1.ptyp; pel2.ptyp] modul moduls in
+        let env4 = unify [PTBool; pel.ptyp] modul moduls in
+        (merge_env (merge_env env3 env4) env2, tctx)
+      | ">=", [pel1; pel2] ->
+        let env1, _ = check_pel_type pel1 env tctx modul moduls in
+        let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
+        let env3 = unify [pel1.ptyp; pel2.ptyp] modul moduls in
+        let env4 = unify [PTBool; pel.ptyp] modul moduls in
+        (merge_env (merge_env env3 env4) env2, tctx)
+      | str, _ ->(***reimplement this part***)
+        let ptf = type_of_str str modul moduls in
+        let env0 = ref env in
+        List.iter (fun pel ->
+            let env, _ = check_pel_type pel !env0 tctx modul moduls in
+            env0 := env
+          ) pel_list;
+        let pt1 = ref pel.ptyp in
+        let rec construct_apply ptyps = 
+          match ptyps with
+          | [] -> raise (Invalid_pexpr_loc (pel, "not enough argument(s)."))
+          | [pt] -> pt1 := pt; pt
+          | pt::pts -> PTArrow (pt, construct_apply pts) in
+        let env1 = unify [pel.ptyp; !pt1] modul moduls in
+        let env2 = unify [ptf; construct_apply ((List.map (fun (pel:pexpr_loc)->pel.ptyp) pel_list)@[!pt1])] modul moduls in
+        (merge_env (merge_env env1 env2) !env0, tctx)
+    end
   | PBool b -> let env1 = unify [pel.ptyp; PTBool] modul moduls in (merge_env env1 env, tctx)
   | PTuple pel_list -> 
     let env0 = ref env in
@@ -560,94 +667,6 @@ let rec check_pel_type pel env tctx modul moduls =
         (str, pel.ptyp)
       ) str_pels)] modul moduls in
     (merge_env env1 !env0, tctx)
-  | PNegb pel1 -> 
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2 = unify [PTBool; pel1.ptyp; pel.ptyp] modul moduls in
-    (merge_env env2 env1, tctx)
-  | PAndo (pel1, pel2) -> 
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
-    let env3 = unify [PTBool; pel1.ptyp; pel2.ptyp; pel.ptyp] modul moduls in
-    (merge_env env3 env2, tctx)
-  | POro (pel1, pel2) -> 
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
-    let env3 = unify [PTBool; pel1.ptyp; pel2.ptyp; pel.ptyp] modul moduls in
-    (merge_env env3 env2, tctx)
-  | PNegi pel1 ->
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2 = unify [PTInt; pel1.ptyp; pel.ptyp] modul moduls in
-    (merge_env env2 env1, tctx)
-  | PNegf pel1 ->
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2 = unify [PTFloat; pel1.ptyp; pel.ptyp] modul moduls in
-    (merge_env env2 env1, tctx)
-  | PAdd (pel1, pel2) ->
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
-    let env3 = unify [PTInt; pel1.ptyp; pel2.ptyp; pel.ptyp] modul moduls in
-    (merge_env env3 env2, tctx)
-  | PAddDot(pel1, pel2) ->
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
-    let env3 = unify [PTFloat; pel1.ptyp; pel2.ptyp; pel.ptyp] modul moduls in
-    (merge_env env3 env2, tctx)
-  | PMinus (pel1, pel2) ->
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
-    let env3 = unify [PTInt; pel1.ptyp; pel2.ptyp; pel.ptyp] modul moduls in
-    (merge_env env3 env2, tctx)
-  | PMinusDot (pel1, pel2) ->
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
-    let env3 = unify [PTFloat; pel1.ptyp; pel2.ptyp; pel.ptyp] modul moduls in
-    (merge_env env3 env2, tctx)
-  | PMult (pel1, pel2) ->
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
-    let env3 = unify [PTInt; pel1.ptyp; pel2.ptyp; pel.ptyp] modul moduls in
-    (merge_env env3 env2, tctx)
-  | PMultDot (pel1, pel2) ->
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
-    let env3 = unify [PTFloat; pel1.ptyp; pel2.ptyp; pel.ptyp] modul moduls in
-    (merge_env env3 env2, tctx)
-  | PEqual (pel1, pel2) ->
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
-    let env3 = unify [pel1.ptyp; pel2.ptyp] modul moduls in
-    let env4 = unify [PTBool; pel.ptyp] modul moduls in
-    (merge_env (merge_env env3 env4) env2, tctx)
-  | PNon_Equal (pel1, pel2) ->
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
-    let env3 = unify [pel1.ptyp; pel2.ptyp] modul moduls in
-    let env4 = unify [PTBool; pel.ptyp] modul moduls in
-    (merge_env (merge_env env3 env4) env2, tctx)
-  | PLT (pel1, pel2) ->
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
-    let env3 = unify [pel1.ptyp; pel2.ptyp] modul moduls in
-    let env4 = unify [PTBool; pel.ptyp] modul moduls in
-    (merge_env (merge_env env3 env4) env2, tctx)
-  | PGT (pel1, pel2) ->
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
-    let env3 = unify [pel1.ptyp; pel2.ptyp] modul moduls in
-    let env4 = unify [PTBool; pel.ptyp] modul moduls in
-    (merge_env (merge_env env3 env4) env2, tctx)
-  | PLE (pel1, pel2) ->
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
-    let env3 = unify [pel1.ptyp; pel2.ptyp] modul moduls in
-    let env4 = unify [PTBool; pel.ptyp] modul moduls in
-    (merge_env (merge_env env3 env4) env2, tctx)
-  | PGE (pel1, pel2) ->
-    let env1, _ = check_pel_type pel1 env tctx modul moduls in
-    let env2, _ = check_pel_type pel2 env1 tctx modul moduls in
-    let env3 = unify [pel1.ptyp; pel2.ptyp] modul moduls in
-    let env4 = unify [PTBool; pel.ptyp] modul moduls in
-    (merge_env (merge_env env3 env4) env2, tctx)
   | PIF (pel1, pel2, opel3) -> begin
       match opel3 with
       | None ->
@@ -718,22 +737,7 @@ let rec check_pel_type pel env tctx modul moduls =
       ) str_pel_list;
     (!env0, tctx)
   | PConstr _ -> (env, tctx)
-  | PApply (str, pel_list) -> (***reimplement this part***)
-    let ptf = type_of_str str modul moduls in
-    let env0 = ref env in
-    List.iter (fun pel ->
-        let env, _ = check_pel_type pel !env0 tctx modul moduls in
-        env0 := env
-      ) pel_list;
-    let pt1 = ref pel.ptyp in
-    let rec construct_apply ptyps = 
-      match ptyps with
-      | [] -> raise (Invalid_pexpr_loc (pel, "not enough argument(s)."))
-      | [pt] -> pt1 := pt; pt
-      | pt::pts -> PTArrow (pt, construct_apply pts) in
-    let env1 = unify [pel.ptyp; !pt1] modul moduls in
-    let env2 = unify [ptf; construct_apply ((List.map (fun (pel:pexpr_loc)->pel.ptyp) pel_list)@[!pt1])] modul moduls in
-    (merge_env (merge_env env1 env2) !env0, tctx)
+
 
 let rec check_pformulal_type pfml tctx modul moduls =
   match pfml.pfml with
@@ -801,11 +805,12 @@ let rec apply_env_to_pel env (pel:pexpr_loc) =
   (* | PDot (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2 *)
   | PAray (pel_list) -> List.iter (fun pel->apply_env_to_pel env pel) pel_list
   | PLst (pel_list) -> List.iter (fun pel->apply_env_to_pel env pel) pel_list
-  | PAray_Field (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
-  | PLst_Cons (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
+  | POp (op, pel_list) -> List.iter (fun pel->apply_env_to_pel env pel) pel_list
+  (* | PAray_Field (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
+  | PLst_Cons (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2 *)
   | PTuple pel_list -> List.iter (fun pel->apply_env_to_pel env pel) pel_list
   | PRecord str_pel_list -> List.iter (fun (str,pel) -> apply_env_to_pel env pel) str_pel_list
-  | PNegb pel1 -> apply_env_to_pel env pel1
+  (* | PNegb pel1 -> apply_env_to_pel env pel1
   | PNegi pel1 -> apply_env_to_pel env pel1
   | PNegf pel1 -> apply_env_to_pel env pel1
   | PAndo (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
@@ -821,7 +826,7 @@ let rec apply_env_to_pel env (pel:pexpr_loc) =
   | PLT (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
   | PGT (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
   | PLE (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
-  | PGE (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
+  | PGE (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2 *)
   | PIF (pel1, pel2, opel3) -> begin
       match opel3 with
       | None -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
@@ -838,7 +843,7 @@ let rec apply_env_to_pel env (pel:pexpr_loc) =
     apply_env_to_pel env pel1; 
     List.iter (fun (str, pel) -> apply_env_to_pel env pel) str_pel_list
   | PConstr (PConstr_compound (str, pel1)) -> apply_env_to_pel env pel1
-  | PApply (str, pel_list) -> List.iter (fun pel -> apply_env_to_pel env pel) pel_list
+  (* | PApply (str, pel_list) -> List.iter (fun pel -> apply_env_to_pel env pel) pel_list *)
   | _ -> ()
 
 let rec apply_env_to_pformulal env pfml =
