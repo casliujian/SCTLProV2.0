@@ -1,0 +1,45 @@
+datatype st = {
+	farmer: bool;
+	wolf: bool;
+	goat: bool;
+	cabbage: bool;
+}
+
+value init = {
+	farmer = false;
+	wolf = false;
+	goat = false;
+	cabbage = false;
+}
+
+/*
+function next_state s : st -> list st = 
+	var tmp_list = [];
+	let tmp_list = [];
+	(if s.farmer = s.wolf then
+		tmp_list <- (s with {farmer = !s.farmer; wolf = !s.wolf;}) :: tmp_list);
+	(if s.farmer = s.goat then
+		tmp_list <- (s with {farmer = !s.farmer; goat = !s.goat;}) :: tmp_list);
+	(if s.farmer = s.cabbage then
+		tmp_list <- (s with {farmer = !s.farmer; cabbage = !s.cabbage;}) :: tmp_list);
+	tmp_list <- (s with {farmer = !s.farmer;}) :: tmp_list;
+	tmp_list
+*/
+
+function safe x : st -> bool = 
+	let (s,t) = (1,2);
+	!(x.farmer != x.wolf && x.wolf = x.goat) && !(x.farmer != x.goat && x.goat = x.cabbage)
+
+function okay y : st -> bool = 
+	y.farmer = true && y.wolf = true && y.goat = true && y.cabbage = true
+	
+Model {
+//	transition s = next_state s
+	next s = 
+		s.farmer = s.wolf : s with {farmer = !s.farmer; wolf = !s.wolf;};
+		s.farmer = s.goat : s with {farmer = !s.farmer; goat = !s.goat;};
+		s.farmer = s.cabbage : s with {farmer = !s.farmer; cabbage = !s.cabbage;};
+		true : s with {farmer = !s.farmer;};
+
+	property find = EU (x, y, safe(x), okay(y), init)
+}

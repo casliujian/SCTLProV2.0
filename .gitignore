@@ -1,0 +1,8 @@
+*.cm[ioxa]
+parser.mli
+parser.ml
+lexer.ml
+*.origin
+*.typed
+*.conflicts
+sctlprov2

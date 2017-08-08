@@ -1,0 +1,48 @@
+//import Dummy
+(*datatype t1 = int*)
+datatype t2 = int
+datatype t3 = {
+        x : int;
+        y : bool;
+    }
+datatype day = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
+
+val x = 10
+var y = 20
+var z = 4
+
+function day_of_z z : int -> day = 
+    match z with
+    | 1 -> Monday
+    | 2 -> Tuesday
+    | 3 -> Wednesday
+    | 4 -> Thursday
+    | 5 -> Friday
+    | 6 -> Saturday
+    | _ -> Sunday
+
+function is_sunday d : day -> bool= 
+    d = Sunday
+
+function is_int_sunday i : int -> bool = 
+    is_sunday (day_of_z i)
+
+function fair1 z : int -> bool = 
+    is_sunday (day_of_z z)
+
+function test s = 
+    if s<7 then
+        s+1
+    else
+        1
+
+Model {
+    transition s = 
+        if s < 7 then 
+            s+1 
+        else 
+            1
+    fairness fair1 s; AX(x, fair1 x, s)
+    property dummy = is_int_sunday 1
+    property reach_sunday = AF (x, is_int_sunday x, 1)
+}
