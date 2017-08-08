@@ -5,4 +5,7 @@ lexer.ml
 *.origin
 *.typed
 *.conflicts
+*.o
+*.a
+*.cmxa
 sctlprov2
