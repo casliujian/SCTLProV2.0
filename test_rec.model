@@ -1,0 +1,37 @@
+function length lst: (list int) -> int = 
+    match lst with
+    | [] -> 0
+    | l :: ls -> 1+(length ls)
+
+value init = [1;2;3;4]
+
+function is_length4 lst : (list int) -> bool = 
+    (length lst) = 4
+
+function last_lst lst: (list int) -> int = 
+    match lst with
+    | [l] -> l
+    | l :: ls -> last_lst ls
+
+function remove_lst lst : (list int) -> (list int) = 
+    match lst with
+    | [l] -> []
+    | l :: ls -> l :: (remove_lst ls)
+
+function is_empty lst : (list int) -> bool = 
+    lst = []
+
+function last_is4 lst : (list int) -> bool = 
+    (last_lst lst) = 4
+
+Model {
+    next s = 
+//        s = [1;2;3;4] : [5;6;7;8;9];
+        s = [] : [];
+        s != [] : remove_lst s;
+
+    property test = AF(x, is_length4 x, init)
+    property test2 = is_length4 init
+    property test3 = AF(x, is_empty x, init)
+    property test4 = AF(x, last_is4 x, init)
+}

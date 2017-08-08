@@ -85,8 +85,9 @@ let rec get_matched_pattern value pat_expr_list =
     (* | VFloat f, (Pat_Symbol str, expr)::pel -> [(str, VFloat f)], expr *)
     | VUnt, (Pat_Unt, expr)::pel -> [], expr
     (* | VBool b, (VBool c, expr)::pel -> if b=c then [], expr else get_matched_pattern value pel *)
+    | VLst [], (Pat_Lst [], expr)::pel -> [], expr
     | VAray vl, (Pat_Aray pl, expr)::pel 
-    | VLst vl, (Pat_Aray pl, expr)::pel ->
+    | VLst vl, (Pat_Lst pl, expr)::pel ->
         if List.length vl <> List.length pl then
             get_matched_pattern value pel
         else begin
@@ -440,7 +441,22 @@ let pkripke_model_to_model (pkm:pkripke_model) runtime modul =
     {
         transition = (ppatl_to_pattern (fst pkm.transition), List.map (fun (e1, e2) -> pexprl_to_expr e1, pexprl_to_expr e2) (snd pkm.transition));
         fairness = List.map (fun pfl -> pfmll_to_fml pfl runtime modul) pkm.fairness;
-        properties = List.map (fun (str, pfmll) -> str, pfmll_to_fml pfmll runtime modul) pkm.properties;
+        properties = List.map (fun (str, pfmll) -> 
+        let fml = pfmll_to_fml pfmll runtime modul in
+        match fml with
+        | Atomic (pred, ss) -> 
+            str, Atomic (pred, List.map ( fun s ->
+                match s with
+                | State _ -> s
+                | SVar sv -> begin
+                        try
+                            State (evaluate (Symbol [sv]) [] runtime modul)
+                        with _ -> s
+                    end
+            ) ss)
+        | _ -> str, fml
+        (* str, pfmll_to_fml pfmll runtime modul *)
+        ) pkm.properties;
     }
 
 let pmoduls_to_runtime pmoduls pkripke_model start_modul =

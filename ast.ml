@@ -66,28 +66,9 @@ and pexpr =
     | PAray of (pexpr_loc list)
     | PLst of (pexpr_loc list)
     | POp of string * (pexpr_loc list)
-    (* | PAray_Field of pexpr_loc * pexpr_loc *)
-    (* | PLst_Cons of pexpr_loc * pexpr_loc *)
     | PBool of bool
     | PTuple of (pexpr_loc list)
     | PRecord of ((string * pexpr_loc) list)
-    (* | PNegb of pexpr_loc *)
-    (* | PAndo of pexpr_loc * pexpr_loc *)
-    (* | POro of pexpr_loc * pexpr_loc *)
-    (* | PNegi of pexpr_loc *)
-    (* | PNegf of pexpr_loc *)
-    (* | PAdd of pexpr_loc * pexpr_loc *)
-    (* | PAddDot of pexpr_loc * pexpr_loc *)
-    (* | PMinus of pexpr_loc * pexpr_loc *)
-    (* | PMinusDot of pexpr_loc * pexpr_loc *)
-    (* | PMult of pexpr_loc * pexpr_loc *)
-    (* | PMultDot of pexpr_loc * pexpr_loc *)
-    (* | PEqual of pexpr_loc * pexpr_loc *)
-    (* | PNon_Equal of pexpr_loc * pexpr_loc *)
-    (* | PLT of pexpr_loc * pexpr_loc *)
-    (* | PGT of pexpr_loc * pexpr_loc *)
-    (* | PLE of pexpr_loc * pexpr_loc *)
-    (* | PGE of pexpr_loc * pexpr_loc *)
     | PIF of pexpr_loc * pexpr_loc * (pexpr_loc option)
     | PWhile of pexpr_loc * pexpr_loc
     | PFor of string * pexpr_loc * pexpr_loc * pexpr_loc
@@ -96,12 +77,10 @@ and pexpr =
     | PMatch of pexpr_loc * ((ppattern_loc * pexpr_loc) list)
     | PWith of pexpr_loc * ((string * pexpr_loc) list)
     | PConstr of pconstr
-    (* | PApply of string * (pexpr_loc list) *)
 and ppattern_loc = {
     ppat: ppattern;
     mutable ptyp: ptyp;
     loc: location;
-    (*constrnt: pexpr_loc option; *)
 }
 and ppattern =
       PPat_Symbol of string
@@ -113,12 +92,7 @@ and ppattern =
     | PPat_Lst_Cons of ppattern_loc * ppattern_loc
     | PPat_Underline
     | PPat_Tuple of (ppattern_loc list)
-    (* | PPat_Record of ((string * ppattern_loc) list) *)
     | PPat_Constr of (string * (ppattern_loc option))
-(* and pconstr_loc = {
-    pconstr: pconstr;
-    loc: location;
-} *)
 and pconstr = 
     | PConstr_basic of string
     | PConstr_compound of string * pexpr_loc
@@ -144,14 +118,11 @@ type ast =
     | PExpr_loc of ptyp * pexpr_loc
     | PTyp of ptyp
     | PFunction of ptyp * (ppattern_loc list) * pexpr_loc
-    (*| PTyp of ptyp
-    | PPattern of ppattern_loc*)
 
 type psymbol_kind = UDT | Val | Var | Function
 type psymbol_tbl = (string, (psymbol_kind * ast)) Hashtbl.t
 type pkripke_model = {
     transition : ppattern_loc * ((pexpr_loc * pexpr_loc) list);
-    (* transition: (ppattern_loc * pexpr_loc); *)
     fairness: pformula_loc list;
     properties: (string * pformula_loc) list;
 }
@@ -169,7 +140,6 @@ let mk_pexpr_loc pexpr ptyp loc_start loc_end = {
         loc_start = loc_start;
         loc_end = loc_end;
     };
-    (*attri = attri;*)
 }
 let mk_ppat_loc ppat ptyp loc_start loc_end = {
     ppat = ppat;
@@ -178,15 +148,7 @@ let mk_ppat_loc ppat ptyp loc_start loc_end = {
         loc_start = loc_start;
         loc_end = loc_end;
     };
-    (*constrnt = constrnt;*)
 }
-(* let mk_pconstr_loc pconstr loc_start loc_end = {
-    pconstr = pconstr;
-    loc = {
-        loc_start = loc_start;
-        loc_end = loc_end;
-    };
-} *)
 let mk_pformula_loc pfml loc_start loc_end = {
     pfml = pfml;
     loc = {

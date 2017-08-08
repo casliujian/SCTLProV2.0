@@ -13,5 +13,7 @@ opt:
 
 clean:
 	rm -f *.cm[ioxa]
+	rm -f *.a
+	rm -f *.o
 	rm -f utils.cma
 	rm -f utils.cmxa
