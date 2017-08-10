@@ -30,7 +30,7 @@ Model {
         s = [] : [];
         s != [] : remove_lst s;
 
-    property test = AF(x, is_length4 x, init)
+    property test = EX(x, is_length4 x, init)
     property test2 = is_length4 init
     property test3 = AF(x, is_empty x, init)
     property test4 = AF(x, last_is4 x, init)
