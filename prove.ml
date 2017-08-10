@@ -147,12 +147,18 @@ let get_global_merge level =
 
 
 let generate_EX_cont gamma fairs levl x fml next contl contr = 
-    State_set.fold (fun elem b ->
-        Cont (State_set.empty, fresh_fairs fairs, levl^"1", And (subst_s fml x (State elem), EG ("y", Top, State elem)), contl, b, [], [])) next contr
+	let ff = fresh_fairs fairs in
+	State_set.fold (fun elem b ->
+		Cont (State_set.empty, ff, levl^"1", subst_s fml x (State elem), Cont (State_set.empty, ff, "-1", EG("y", Top, State elem), contl, b, [], []), b, [], [])
+		(* Cont (State_set.empty, fresh_fairs fairs, levl^"1", And (subst_s fml x (State elem), EG ("y", Top, State elem)), contl, b, [], []) *)
+		) next contr
 
 let generate_AX_cont gamma fairs levl x fml next contl contr = 
+	let ff = fresh_fairs fairs in
     State_set.fold (fun elem b ->
-        Cont (State_set.empty, fresh_fairs fairs, levl^"1", Or (subst_s fml x (State elem), Neg (EG ("y", Top, State elem))), b, contr, [], [])) next contl
+		Cont (State_set.empty, ff, levl^"1", subst_s fml x (State elem), b, Cont (State_set.empty, ff, "-1", EG ("y", Top, State elem), b, contr, [], []), [], [])	
+	(* Cont (State_set.empty, fresh_fairs fairs, levl^"1", Or (subst_s fml x (State elem), Neg (EG ("y", Top, State elem))), b, contr, [], []) *)
+		) next contl
 
 let generate_EG_cont gamma fairs level x fml s next contl contr =
 	let level1 = level^"1" in
@@ -291,7 +297,7 @@ and prove_fairs cont runtime modul =
                 prove_fairs (generate_EX_cont gamma fairs levl x fml1 next contl contr) runtime modul
             | EG (x, fml1, State s) -> 
 				if (levl <> "-1") && (is_in_true_merge s levl) then prove_fairs contl runtime modul else
-				if (levl <> "-1") && (is_in_true_merge s levl) then prove_fairs contr runtime modul else 
+				if (levl <> "-1") && (is_in_false_merge s levl) then prove_fairs contr runtime modul else 
                 if State_set.mem s gamma 
                 then  
                     let is_fair = list_conditional fairs true (fun (e, ss) -> State_set.mem s ss) in
