@@ -48,8 +48,8 @@
 
 
 %right ColonColon
-%left Oro
-%left Ando
+%right Oro
+%right Ando
 %right Negb
 %nonassoc LT LE GT GE
 %nonassoc Equal Non_Equal
@@ -58,6 +58,7 @@
 %left Mult MultDot
 %nonassoc NEGI NEGF
 %right Arrow
+%right COLONCOLON
 
 
 %%
@@ -279,7 +280,7 @@ expr_single: expr_path {mk_pexpr_loc (PSymbol $1) (PTVar (new_type_var ())) $sta
             mk_pexpr_loc (POp (id, el)) (PTVar (new_type_var ())) $startpos(id) $endpos(el)
         }
     | Let p = pattern Equal e = expr_single {mk_pexpr_loc (PLet (p, e)) PTUnt $startpos($1) $endpos(e)}
-    | e1 = expr_single ColonColon e2 = expr_single {
+    | e1 = expr_single ColonColon e2 = expr_single %prec COLONCOLON{
             mk_pexpr_loc (POp ("::", [e1; e2])) e2.ptyp $startpos(e1) $endpos(e2)
         }
     | e1 = expr_single LB2 e2 = expr_single RB2 {
@@ -326,7 +327,7 @@ pattern: id = Iden   {mk_ppat_loc (PPat_Symbol id) (PTVar (new_type_var())) $sta
             | [] -> mk_ppat_loc (PPat_Lst []) (PTLst (PTVar (new_type_var()))) $startpos($1) $endpos($3)
             | p::pl' -> mk_ppat_loc (PPat_Lst pl) (PTLst p.ptyp) $startpos($1) $endpos($3)
         }
-    | p1 = pattern ColonColon p2 = pattern    {mk_ppat_loc (PPat_Lst_Cons (p1, p2)) (p2.ptyp) $startpos(p1) $endpos(p2)}
+    | p1 = pattern ColonColon p2 = pattern  %prec COLONCOLON  {mk_ppat_loc (PPat_Lst_Cons (p1, p2)) (p2.ptyp) $startpos(p1) $endpos(p2)}
     | Underline     {mk_ppat_loc PPat_Underline (PTVar (new_type_var())) $startpos($1) $endpos($1)}
     | LB1 p = pattern Comma pl = separated_nonempty_list(Comma, pattern) RB1   {mk_ppat_loc (PPat_Tuple (p::pl)) (PTTuple (List.map (fun pat -> pat.ptyp) (p::pl))) $startpos($1) $endpos($5)}
     | uid = UIden {mk_ppat_loc (PPat_Constr (uid, None)) (PTVar (new_type_var())) $startpos(uid) $endpos(uid)}

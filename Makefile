@@ -67,5 +67,5 @@ clean:
 	rm -f *.cm[ioxa]
 	rm -f *.o
 	rm -f sctlprov2
-	rm -f *.typed
-	rm -f *.origin
+	rm -f ./examples/*.typed
+	rm -f ./examples/*.origin
