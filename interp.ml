@@ -76,7 +76,9 @@ let rec modified_record_value rv str_list value =
 
 let rec get_matched_pattern value pat_expr_list = 
     match value, pat_expr_list with
-    | _, [] -> raise (No_matched_pattern value)
+    | _, [] -> 
+        print_endline ("can not match value with empty pattern: "^(str_value value));
+        raise (No_matched_pattern value)
     | _, (Pat_Underline, expr)::pel -> [], expr
     | _, (Pat_Symbol str, expr)::pel -> [(str, ref value)], expr
     | VInt i, (Pat_Int j, expr)::pel -> if i = j then [], expr else get_matched_pattern value pel
@@ -224,6 +226,7 @@ and evaluate expr ctx runtime modul =
                 and v2 = evaluate e2 ctx runtime modul in begin
                     match v1, v2 with
                     | VLst vl1, VLst vl2 -> VLst (vl1 @ vl2)
+                    | VLst vl1, _ -> raise (Evaluation_error ((str_value v2)^" should be a list value."))
                     | _ -> raise (Evaluation_error ("both "^(str_value v1)^" and "^(str_value v2)^" should be a list value."))
                 end
             | "!", [e1] ->
@@ -233,19 +236,37 @@ and evaluate expr ctx runtime modul =
                     | _ -> raise (Evaluation_error ((str_value v1)^" is not a bool value."))    
                 end
             | "&&", [e1; e2] -> 
-                let v1 = evaluate e1 ctx runtime modul 
-                and v2 = evaluate e2 ctx runtime modul in begin
+                let v1 = evaluate e1 ctx runtime modul in
+                if v1 = VBool true then
+                    let v2 = evaluate e2 ctx runtime modul in begin
+                        match v2 with
+                        | VBool b -> VBool b
+                        | _ -> raise (Evaluation_error "can not evaluate to bool value.")
+                    end
+                else 
+                    VBool false
+                (* and v2 = evaluate e2 ctx runtime modul in begin
                     match v1, v2 with
                     | VBool b1, VBool b2 -> VBool (b1 && b2)
                     | _ -> raise (Evaluation_error "can not evaluate to bool value.")    
-                end
+                end *)
             | "||", [e1; e2] ->
-                let v1 = evaluate e1 ctx runtime modul 
-                and v2 = evaluate e2 ctx runtime modul in begin
-                    match v1, v2 with
+                let v1 = evaluate e1 ctx runtime modul in
+                if v1 = VBool true then
+                    VBool true
+                else if v1 = VBool false then
+                    let v2 = evaluate e2 ctx runtime modul in begin
+                        match v2 with
+                        | VBool b -> v2
+                        | _ -> raise (Evaluation_error "can not evaluate to bool value.")
+                    end
+                else
+                    raise (Evaluation_error "can not evaluate to bool value.")
+
+                    (* match v1, v2 with
                     | VBool b1, VBool b2 -> VBool (b1 || b2)
                     | _ -> raise (Evaluation_error "can not evaluate to bool value.")    
-                end
+                end *)
             | "-", [e1] ->
                 let v1 = evaluate e1 ctx runtime modul in begin
                     match v1 with
@@ -325,18 +346,20 @@ and evaluate expr ctx runtime modul =
                 and v2 = evaluate e2 ctx runtime modul in
                 VBool (v1 >= v2)
             | str, es ->
-                let pats, e1 = find_function str runtime modul in
-                if List.length es <> List.length pats then 
-                    raise (Evaluation_error ("function "^str^" has "^(string_of_int (List.length pats))^" parameters, but is applied to "^(string_of_int (List.length es))^" arguments."))
-                else begin
-                    let ctx0 = ref [] in
-                    for i = 0 to List.length es - 1 do
-                        let e1 = List.nth es i in
-                        let ctx1, _ = get_matched_pattern (evaluate e1 ctx runtime modul) [(List.nth pats i, e1)] in
-                        ctx0 := ctx1 @ !ctx0
-                    done;
-                    evaluate e1 (!ctx0 @ ctx) runtime modul
-                end
+                (try 
+                    let pats, e1 = find_function str runtime modul in
+                    if List.length es <> List.length pats then 
+                        raise (Evaluation_error ("function "^str^" has "^(string_of_int (List.length pats))^" parameters, but is applied to "^(string_of_int (List.length es))^" arguments."))
+                    else begin
+                        let ctx0 = ref [] in
+                        for i = 0 to List.length es - 1 do
+                            let e1 = List.nth es i in
+                            let ctx1, _ = get_matched_pattern (evaluate e1 ctx runtime modul) [(List.nth pats i, e1)] in
+                            ctx0 := ctx1 @ !ctx0
+                        done;
+                        evaluate e1 (!ctx0 @ ctx) runtime modul
+                    end
+                with e -> print_endline ("error when evaluation function "^str); raise e)
         end
     | Tuple ea -> VTuple (List.map (fun e -> evaluate e ctx runtime modul) ea)
     | Record str_expr_array -> VRecord ((List.map (fun (str, expr) -> str, evaluate expr ctx runtime modul) str_expr_array))

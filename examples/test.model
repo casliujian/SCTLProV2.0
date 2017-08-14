@@ -7,9 +7,9 @@ datatype t3 = {
     }
 datatype day = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
 
-val x = 10
-var y = 20
-var z = 4
+value x = 10
+value y = 20
+value z = 4
 
 function day_of_z z : int -> day = 
     match z with
@@ -25,7 +25,13 @@ function is_sunday d : day -> bool=
     d = Sunday
 
 function is_int_sunday i : int -> bool = 
-    is_sunday (day_of_z i)
+    match i with
+    | 1 -> 
+        let a = i;
+        (is_sunday (day_of_z a)) || (is_sunday (day_of_z (a+1)))
+    |_ -> 
+        let (a,b) = (i,2);
+        is_sunday (day_of_z a)
 
 function fair1 z : int -> bool = 
     is_sunday (day_of_z z)
@@ -37,12 +43,11 @@ function test s =
         1
 
 Model {
-    transition s = 
-        if s < 7 then 
-            s+1 
-        else 
-            1
-    fairness fair1 s; AX(x, fair1 x, s)
+    next s = 
+        s<7: s+1;
+        s>=7: 1;
+
+//    fairness (fair1 s); AX(x, fair1 x, s)
     property dummy = is_int_sunday 1
     property reach_sunday = AF (x, is_int_sunday x, 1)
 }

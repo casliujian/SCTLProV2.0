@@ -5,7 +5,7 @@ exception Unify_error of ptyp * ptyp
 exception Invalid_typepath of string
 exception Invalid_pexpr_loc of pexpr_loc * string
 exception Undefined_modul of string
-exception Undefined_idenfier of string
+exception Undefined_idenfier of string 
 
 (*type dep = string * ((dep list) option)
 
@@ -75,24 +75,47 @@ let rec expand_udt pt modul moduls =
       | [s] -> 
         if Hashtbl.mem moduls modul then begin
           let m = Hashtbl.find moduls modul in
-          let tmp_pt = ref (PTVar 0) in
+          let tmp_pt = ref pt in
+          let found = ref false in
           if Hashtbl.mem m.psymbol_tbl s then begin
             match (Hashtbl.find m.psymbol_tbl s) with
             | (UDT, PTyp pt) -> 
+              tmp_pt := pt;
+              (* print_endline ("found udt "^s); *)
+              found := true;
               let index = ref 0 in
-              List.iter (fun pt2 -> decr index; tmp_pt := replace_ptvar pt !index pt2) pt1
+              List.iter (fun pt2 -> decr index; tmp_pt := replace_ptvar !tmp_pt !index pt2) pt1
             | _ -> ()
-          end;
-          let index = ref 0 in
+          end else
+            List.iter (fun mname ->
+              if not !found then begin
+                let mi = Hashtbl.find moduls mname in
+                match (Hashtbl.find mi.psymbol_tbl s) with
+                | (UDT, PTyp pt) ->
+                  tmp_pt := pt;
+                  found := true;
+                  let index = ref 0 in
+                  List.iter (fun pt2 -> decr index; tmp_pt := replace_ptvar !tmp_pt !index pt2) pt1
+                | _ -> ()
+              end
+            ) m.imported;
+
+          (* let index = ref 0 in
           while !tmp_pt = PTVar 0 && !index < List.length m.imported do
             (try 
                tmp_pt := expand_udt pt (List.nth m.imported !index) moduls
              with Invalid_typepath _ -> ());
             incr index
-          done;
-          if !tmp_pt = PTVar 0 then
-            raise (Invalid_typepath s)
-          else
+          done; *)
+          if not !found then begin
+            (* Hashtbl.iter (fun sy def ->
+              match def with
+              | (UDT, _) -> print_string (sy^" ")
+              | _ -> ()
+            ) m.psymbol_tbl;
+            print_endline ""; *)
+            raise (Invalid_typepath (s^" was not defined."))
+          end else
             !tmp_pt
         end else begin
           raise (Undefined_modul modul)
@@ -102,29 +125,6 @@ let rec expand_udt pt modul moduls =
     end
   | _ -> pt
 
-
-(* let rec ptyp_from_typepath strs modul moduls = 
-    let find_ptyp_in_modul ptname m = 
-        try
-            let modul_exists = ref false in
-            let modul = Hashtbl.find moduls m in
-            modul_exists := true;
-            let kind_ast = Hashtbl.find modul.psymbol_tbl ptname in
-            match kind_ast with
-            | UDT, PTyp pt -> pt
-            | _ -> raise (Invalid_typepath str)
-        with Not_found -> 
-            if !modul_exists then 
-                raise (Invalid_typepath str)
-            else 
-                raise (Undefined_modul m) in
-    let strs = String.split_on_char '.' (String.trim str) in
-    if List.length strs > 2 || List.length strs = 0 then 
-        raise Invalid_typepath str
-    else
-        match strs with
-        | [ptname] -> find_ptyp_in_modul ptname modul
-        | [mname; ptname] -> find_ptyp_in_modul ptname mname *)
 
 let ptyp_of_env env var = 
   let rec ptyp_of_var ptyp_list var = 
@@ -250,44 +250,6 @@ let rec unify ptyp_list modul moduls =
     end
 
 
-(* let rec check_dep pmname pmoduls = 
-  try
-    let pm = Hashtbl.find pmoduls pmname in
-    List.iter (fun a -> check_dep a pmoduls) pm.imported
-  with Not_found -> 
-    eprintf "Error: module %s is not defined.\n" pmname; 
-    exit 1 *)
-
-(* let expand_udt_path moduls = 
-    let rec add_type_prefix mname ptyp =
-        match ptyp with
-        | PTUdt (str, ptyps) -> 
-            let strs = String.split_on_char '.' str in begin
-                match strs with
-                | [] -> raise (Invalid_typepath str)
-                | [pname] -> PTUdt (mname^"."^str, List.map (fun pt -> add_type_prefix mname pt) ptyps)
-                | _ -> PTUdt (str, List.map (fun pt -> add_type_prefix mname pt) ptyps)     
-            end
-        | PTAray pt -> PTAray (add_type_prefix mname pt)
-        | PTLst pt -> PTAray (add_type_prefix mname pt)
-        | PTTuple pts -> PTTuple (List.map (fun pt -> add_type_prefix mname pt) pts)
-        | PTRecord str_pts -> PTRecord (List.map (fun (str1, pt) -> (str1, add_type_prefix mname pt)) str_pts)
-        | PTConstrs str_opts -> 
-            PTConstrs (List.map (fun (str1, opt) ->
-                match opt with
-                | None -> (str1, None)
-                | Some pt -> (str1, Some (add_type_prefix mname pt))
-            ) str_opts)
-        | _ -> ptyp in
-    Hashtbl.iter (fun mname modul ->
-        Hashtbl.iter (fun (str, (pkind, ast)) -> 
-            match ast with
-            | PExpr_loc pe -> pe.ptyp <- add_type_prefix mname pe.ptyp; PExpr_loc pe
-            | PTyp pt -> add_type_prefix mname pt
-            | PFunction (ppls, pe) -> pe.ptyp <- add_type_prefix mname pe; PFunction (ppls, pe)
-        ) modul.psymbol_tbl
-    ) moduls *)
-
 type type_context = (string * ptyp) list
 
 let rec find_ptyp str_ptyps str1 = 
@@ -333,31 +295,11 @@ let rec type_of_str str modul moduls =
         ) m.imported
     end;
     if !pt = PTVar 0 then
-      raise (Undefined_idenfier str)
+      raise (Undefined_idenfier (str^" is not defined."))
     else 
       !pt
   with Not_found -> raise (Undefined_modul modul)
 
-
-
-(* let rec check_type pel tctx modul moduls = 
-    match pel.pexpr with
-    | PSymbol str ->
-        try
-            let pt = type_of_var str tctx in
-            if pt = PTVar 0 then begin
-                let m = Hashtbl.find moduls modul in
-                try
-                    match (Hashtbl.find m str) with
-                    | (Val, PExpr_loc pel1) -> pel.ptyp <- pel1.ptyp; tctx
-                    | (Var, PExpr_loc pel1) -> pel.ptyp <- pel1.ptyp; tctx
-                    | _ -> raise (Undefined_idenfier (modul^"."^str))
-                with Not_found -> raise (Undefined_idenfier (modul^"."^str))
-            end else begin
-                pel.ptyp <- pt;
-                tctx
-            end
-        with Not_found -> raise (Undefined_modul modul) *)
 
 let rec check_ppat_type ppatl modul moduls =
   match ppatl.ppat with
@@ -461,7 +403,42 @@ let rec check_pel_type pel env tctx modul moduls =
           raise (Invalid_pexpr_loc (pel, str^" is a module name, not an expression identifier."))
         else begin
           try
-            let pt = type_of_var str tctx in
+            if Pairs.key_exists tctx str then
+              let pt = Pairs.get_value tctx str in
+              let env1 = unify [pt; pel.ptyp] modul moduls in
+              (merge_env env1 env, tctx)
+            else begin
+              let found = ref false in
+              let tmp_env_tctx = ref ([], []) in
+              let m = Hashtbl.find moduls modul in begin
+                try 
+                  match Hashtbl.find m.psymbol_tbl str with
+                  | (Val, PExpr_loc (pt, pel1)) | (Var, PExpr_loc (pt, pel1)) ->
+                    found := true;
+                    let env1 = unify [pt;pel.ptyp; pel1.ptyp] modul moduls in 
+                    tmp_env_tctx := (merge_env env1 env, tctx)
+                  | _ -> raise (Undefined_idenfier ("not defined as a value: "^modul^"."^str))
+                with Not_found -> raise (Undefined_idenfier (modul^"."^str))
+              end;
+              List.iter (fun mname ->
+                let mi = Hashtbl.find moduls mname in
+                try
+                  match Hashtbl.find mi.psymbol_tbl str with
+                  | (Val, PExpr_loc (pt, pel1)) | (Var, PExpr_loc (pt, pel1)) ->
+                    found := true;
+                    let env1 = unify [pt;pel.ptyp; pel1.ptyp] modul moduls in 
+                    tmp_env_tctx := (merge_env env1 env, tctx)
+                  | _ -> raise (Undefined_idenfier ("not defined as a value: "^mname^"."^str))
+                with Not_found -> raise (Undefined_idenfier (mname^"."^str))
+              ) m.imported;
+              if not !found then
+                raise (Undefined_idenfier (modul^"."^str))
+              else
+                !tmp_env_tctx
+            end
+            
+
+            (* let pt = type_of_var str tctx in
             if pt = PTVar 0 then begin
               let m = Hashtbl.find moduls modul in
               try
@@ -473,7 +450,7 @@ let rec check_pel_type pel env tctx modul moduls =
             end else begin
               let env1 = unify [pel.ptyp; pt] modul moduls in
               (merge_env env1 env, tctx)
-            end
+            end *)
           with Not_found -> raise (Undefined_modul modul)
         end
       | str::strs -> 
@@ -637,6 +614,7 @@ let rec check_pel_type pel env tctx modul moduls =
         let env4 = unify [PTBool; pel.ptyp] modul moduls in
         (merge_env (merge_env env3 env4) env2, tctx)
       | str, _ ->(***reimplement this part***)
+        print_endline ("checking type of function "^str);
         let ptf = type_of_str str modul moduls in
         let env0 = ref env in
         List.iter (fun pel ->
@@ -875,16 +853,17 @@ let check_modul modul moduls =
         let env1 = merge_env (unify [ptyp; pel.ptyp] modul moduls) env in
         let ptyp1 = apply_env_to_ptyp env1 ptyp in
         apply_env_to_pel env1 pel;
-        Hashtbl.replace m.psymbol_tbl str (Val, PExpr_loc (ptyp1, pel))
-        (* print_endline ("type check value "^str^" complete.") *)
+        Hashtbl.replace m.psymbol_tbl str (Val, PExpr_loc (ptyp1, pel));
+        print_endline ("type check value "^str^" complete.")
       | (Var, PExpr_loc (ptyp, pel)) -> 
         let env,_ = check_pel_type pel [] [] modul moduls in
         let env1 = merge_env (unify [ptyp; pel.ptyp] modul moduls) env in
         let ptyp1 = apply_env_to_ptyp env1 ptyp in
         apply_env_to_pel env1 pel;
-        Hashtbl.replace m.psymbol_tbl str (Var, PExpr_loc (ptyp1, pel))
-        (* print_endline ("type check variable "^str^" complete.") *)
+        Hashtbl.replace m.psymbol_tbl str (Var, PExpr_loc (ptyp1, pel));
+        print_endline ("type check variable "^str^" complete.")
       | (Function, PFunction (ptyp, ppatl_list, pel)) -> 
+        print_endline ("type checking function "^str);
         let rec build_arrow ptyp_list ptyp1 = 
           match ptyp_list with
           | [] -> ptyp1
@@ -900,8 +879,8 @@ let check_modul modul moduls =
         let env2 = merge_env (unify [ptyp; build_arrow (List.map (fun ppatl->ppatl.ptyp) ppatl_list) pel.ptyp] modul moduls) env1 in
         List.iter (fun ppatl->apply_env_to_ppatl env2 ppatl) ppatl_list;
         apply_env_to_pel env2 pel;
-        Hashtbl.replace m.psymbol_tbl str (Function, PFunction (apply_env_to_ptyp env2 ptyp, ppatl_list, pel))
-        (* print_endline ("type check function "^str^" complete.") *)
+        Hashtbl.replace m.psymbol_tbl str (Function, PFunction (apply_env_to_ptyp env2 ptyp, ppatl_list, pel));
+        print_endline ("type check function "^str^" complete.")
       | _ -> ()
     ) m.psymbol_tbl;
      match m.pkripke_model with

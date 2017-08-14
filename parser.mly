@@ -89,7 +89,7 @@ declars: {}
 ;
 
 declare: Datatype id = Iden args = list(Iden) Equal t = type_def  {
-            print_endline ("declared type: "^(Print.str_ptyp t));
+            print_endline ("declared type: "^id^": "^(Print.str_ptyp t));
             Hashtbl.add symbol_tbl id (UDT, PTyp (erase_type_args t args))
         } 
     | Value id = Iden ote = option(type_of_expr)  Equal e = expr_single  {
@@ -184,6 +184,9 @@ str_typ: Iden Colon typ Semicolon {($1, $3)}
 
 expr: expr_single {$1}
     | e = expr_single Semicolon el = separated_nonempty_list(Semicolon, expr_single)    {
+            mk_pexpr_loc (PSeq (e::el)) (PTVar (new_type_var())) $startpos(e) $endpos(el)
+        }
+    | LB1 e = expr_single Semicolon el = separated_nonempty_list(Semicolon, expr_single) RB1   {
             mk_pexpr_loc (PSeq (e::el)) (PTVar (new_type_var())) $startpos(e) $endpos(el)
         }
 ;
