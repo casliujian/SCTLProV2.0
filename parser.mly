@@ -10,25 +10,29 @@
         !type_var
 
     let erase_type_args t args = 
-        let tmp_t = ref t in
-        let rec erase_type_args_i pt i = 
-            match pt with
-            | PTUdt (str, pts) -> 
-                let a = List.nth args i in
-                if a=str then
-                    PTVar (-i-1)
-                else 
-                    PTUdt (str, List.map (fun pt -> erase_type_args_i pt i) pts) 
-            | PTAray pt1 -> PTAray (erase_type_args_i pt1 i) 
-            | PTLst pt1 -> PTLst (erase_type_args_i pt1 i)
-            | PTTuple pts -> PTTuple (List.map (fun pt -> erase_type_args_i pt i) pts)
-            | PTRecord str_pts -> PTRecord (List.map (fun (str, pt) -> (str, erase_type_args_i pt i)) str_pts)
-            | _ -> pt
-        in
-        for i = 0 to (List.length args) do
-            tmp_t := erase_type_args_i !tmp_t i
-        done;
-        !tmp_t
+        match args with 
+        | [] -> t
+        | _ -> 
+            let tmp_t = ref t in
+            let rec erase_type_args_i pt i = 
+                match pt with
+                | PTUdt (str, pts) -> 
+                    let a = List.nth args i in
+                    if a=str then
+                        PTVar (-i-1)
+                    else 
+                        PTUdt (str, List.map (fun pt -> erase_type_args_i pt i) pts) 
+                | PTAray pt1 -> PTAray (erase_type_args_i pt1 i) 
+                | PTLst pt1 -> PTLst (erase_type_args_i pt1 i)
+                | PTTuple pts -> PTTuple (List.map (fun pt -> erase_type_args_i pt i) pts)
+                | PTRecord str_pts -> PTRecord (List.map (fun (str, pt) -> (str, erase_type_args_i pt i)) str_pts)
+                | _ -> pt
+            in
+            for i = 0 to (List.length args) do
+                tmp_t := erase_type_args_i !tmp_t i
+            done;
+            !tmp_t
+        
 %}
 %token <int>Int 
 %token <float>Float
@@ -36,7 +40,7 @@
 %token Import Datatype Vertical Value Let Match With Underline Model Next Property If Then Else For In While Do Done
 %token LB1 RB1 LB2 RB2 LB3 RB3 Equal Non_Equal LT GT LE GE Comma Semicolon Dot DotDot Arrow EOF Add AddDot Minus MinusDot Mult MultDot
 %token Negb Ando Oro And Or Neg LArrow Colon ColonColon Init Top Bottom AX EX AF EG AR EU True False Function Of State
-%token TLst TFloat TAray TInt TBool TUnt
+%token TLst TFloat TAray TInt TBool TUnt At
 
 %start <(string list) * (Ast.psymbol_tbl) * ((Ast.pkripke_model) option)>program
  %start <unit>debug 
@@ -59,6 +63,8 @@
 %nonassoc NEGI NEGF
 %right Arrow
 %right COLONCOLON
+%left At
+%nonassoc FUN
 
 
 %%
@@ -83,14 +89,17 @@ declars: {}
 ;
 
 declare: Datatype id = Iden args = list(Iden) Equal t = type_def  {
-        Hashtbl.add symbol_tbl id (UDT, PTyp (erase_type_args t args))
+            print_endline ("declared type: "^(Print.str_ptyp t));
+            Hashtbl.add symbol_tbl id (UDT, PTyp (erase_type_args t args))
         } 
     | Value id = Iden ote = option(type_of_expr)  Equal e = expr_single  {
+            print_endline ("declared value "^id);
             match ote with
             | None -> Hashtbl.add symbol_tbl id (Val, PExpr_loc (PTVar (new_type_var ()), e))
             | Some pt -> Hashtbl.add symbol_tbl id (Val, PExpr_loc (pt, e))
         }
     | Function id = Iden ags = args otf = option(type_of_expr) Equal e = expr  {
+        print_endline ("declared function "^id);
         match otf with
         | None -> Hashtbl.add symbol_tbl id (Function, PFunction(PTVar (new_type_var ()), ags, e))
         | Some pt -> Hashtbl.add symbol_tbl id (Function, PFunction(pt, ags, e))}
@@ -276,12 +285,15 @@ expr_single: expr_path {mk_pexpr_loc (PSymbol $1) (PTVar (new_type_var ())) $sta
     | uid = UIden e = expr_single {
             mk_pexpr_loc (PConstr ((PConstr_compound (uid, e)))) (PTVar (new_type_var ())) $startpos(uid) $endpos(e)
         }
-    | id = Iden el = nonempty_list(expr_single) {
+    | id = Iden el = nonempty_list(expr_single) %prec FUN {
             mk_pexpr_loc (POp (id, el)) (PTVar (new_type_var ())) $startpos(id) $endpos(el)
         }
     | Let p = pattern Equal e = expr_single {mk_pexpr_loc (PLet (p, e)) PTUnt $startpos($1) $endpos(e)}
     | e1 = expr_single ColonColon e2 = expr_single %prec COLONCOLON{
             mk_pexpr_loc (POp ("::", [e1; e2])) e2.ptyp $startpos(e1) $endpos(e2)
+        }
+    | e1 = expr_single At e2 = expr_single {
+            mk_pexpr_loc (POp ("@", [e1; e2])) e1.ptyp $startpos(e1) $endpos(e2)
         }
     | e1 = expr_single LB2 e2 = expr_single RB2 {
         let e:Ast.pexpr_loc = e1 in

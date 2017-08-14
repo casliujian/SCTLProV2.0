@@ -219,6 +219,13 @@ and evaluate expr ctx runtime modul =
                     | VLst vl -> VLst (v1::vl)    
                     | _ -> raise (Evaluation_error ((str_value v2)^" should be a list value."))
                 end
+            | "@", [e1; e2] ->
+                let v1 = evaluate e1 ctx runtime modul 
+                and v2 = evaluate e2 ctx runtime modul in begin
+                    match v1, v2 with
+                    | VLst vl1, VLst vl2 -> VLst (vl1 @ vl2)
+                    | _ -> raise (Evaluation_error ("both "^(str_value v1)^" and "^(str_value v2)^" should be a list value."))
+                end
             | "!", [e1] ->
                 let v1 = evaluate e1 ctx runtime modul in begin
                     match v1 with

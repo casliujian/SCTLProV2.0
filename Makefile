@@ -1,12 +1,12 @@
 all:
 	make -C utils all
 	ocamlc -c ast.ml
+	ocamlc -c print.ml
 	menhir --infer --explain parser.mly
 	ocamlc -c parser.mli
 	ocamlc -c parser.ml
 	ocamllex lexer.mll
 	ocamlc -c lexer.ml
-	ocamlc -c print.ml
 	ocamlc -I utils -c utils.cma typechecker.ml
 	ocamlc -I utils -c utils.cma expr.ml
 	ocamlc -c formula.ml
@@ -14,7 +14,7 @@ all:
 	ocamlc -I utils -c utils.cma interp.ml
 	ocamlc -c prove.ml
 	ocamlc -c main.ml
-	ocamlc -I utils -o sctlprov2 utils.cma ast.cmo parser.cmo lexer.cmo print.cmo typechecker.cmo expr.cmo formula.cmo dep.cmo interp.cmo prove.cmo main.cmo
+	ocamlc -I utils -o sctlprov2 utils.cma ast.cmo print.cmo parser.cmo lexer.cmo typechecker.cmo expr.cmo formula.cmo dep.cmo interp.cmo prove.cmo main.cmo
 
 opt:
 	make -C utils opt

@@ -83,6 +83,7 @@ rule token = parse
   | "-."        {MinusDot}
   | "*"         {Mult}
   | "*."        {MultDot}
+  | "@"         {At}
   | nl        {Lexing.new_line lexbuf; token lexbuf}
   | [' ' '\t']+  {token lexbuf}
   | "//"        {comment_oneline_c lexbuf}

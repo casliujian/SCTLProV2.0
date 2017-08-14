@@ -543,6 +543,11 @@ let rec check_pel_type pel env tctx modul moduls =
         let env2,_ = check_pel_type pel2 env1 tctx modul moduls in
         let env3 = unify [pel.ptyp; pel2.ptyp; PTLst (pel1.ptyp)] modul moduls in
         (merge_env env3 env2, tctx)
+      | "@", [pel1; pel2] ->
+        let env1,_ = check_pel_type pel1 env tctx modul moduls in
+        let env2,_ = check_pel_type pel2 env1 tctx modul moduls in
+        let env3 = unify [pel.ptyp; pel2.ptyp; pel1.ptyp] modul moduls in
+        (merge_env env3 env2, tctx)
       | "!", [pel1] ->
         let env1, _ = check_pel_type pel1 env tctx modul moduls in
         let env2 = unify [PTBool; pel1.ptyp; pel.ptyp] modul moduls in

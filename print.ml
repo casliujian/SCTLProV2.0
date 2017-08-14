@@ -101,6 +101,7 @@ let rec str_pexprl pel =
                 match op, pel_list with
                 | "[]",[pel1; pel2] -> (str_pexprl pel1)^"["^(str_pexprl pel2)^"]"
                 | "::",[pel1; pel2] -> (str_pexprl pel1)^" :: "^(str_pexprl pel2)
+                | "@", [pel1; pel2] -> (str_pexprl pel1)^" @ "^(str_pexprl pel2)
                 | "!",[pel1] -> "(! "^(str_pexprl pel1)^")"
                 | "&&",[pel1; pel2] -> "("^(str_pexprl pel1)^"&&"^(str_pexprl pel2)^")"
                 | "||",[pel1; pel2] -> "("^(str_pexprl pel1)^"||"^(str_pexprl pel2)^")"
