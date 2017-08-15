@@ -201,9 +201,15 @@ let str_modul modul =
             (* tmp_str:= !tmp_str^"transition "^(str_ppatl (fst(kripke.transition)))^"=\n"^(str_pexprl (snd (kripke.transition)))^"\n\n"; *)
             let (p, nexts) = kripke.transition in
             tmp_str := !tmp_str ^ "transition "^(str_ppatl p)^" = \n";
-            List.iter (fun (e1, e2) -> 
-                tmp_str := !tmp_str ^ (str_pexprl e1)^" : "^(str_pexprl e2)^";\n"
-            ) nexts;
+            begin
+                match nexts with
+                | PCase case_nexts ->    
+                    List.iter (fun (e1, e2) -> 
+                        tmp_str := !tmp_str ^ (str_pexprl e1)^" : "^(str_pexprl e2)^";\n"
+                    ) case_nexts
+                | PNo_case no_case_nexts ->
+                    tmp_str := !tmp_str ^ (str_pexprl no_case_nexts)
+            end;
             if List.length kripke.fairness <> 0 then begin
                 tmp_str := !tmp_str^"fairness ";
                 List.iter (fun f -> tmp_str := !tmp_str ^ (str_pformulal f)) kripke.fairness

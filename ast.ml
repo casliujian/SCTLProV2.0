@@ -121,8 +121,11 @@ type ast =
 
 type psymbol_kind = UDT | Val | Var | Function
 type psymbol_tbl = (string, (psymbol_kind * ast)) Hashtbl.t
+type ptrans_def = 
+    | PCase of (pexpr_loc * pexpr_loc) list
+    | PNo_case of pexpr_loc
 type pkripke_model = {
-    transition : ppattern_loc * ((pexpr_loc * pexpr_loc) list);
+    transition : ppattern_loc * ptrans_def;
     fairness: pformula_loc list;
     properties: (string * pformula_loc) list;
 }

@@ -5,7 +5,7 @@ open Printf
 
 module State_key = struct
 	type t = value
-	let compare = Pervasives.compare
+	let compare = value_compare
 end;;
 module State_set = Set.Make(State_key)
 
@@ -14,15 +14,22 @@ let next s runtime modul =
 	let model = runtime.model in 
 	let ctx, _ = get_matched_pattern s [(fst model.transition, Int 0)] in
 	let nexts = snd model.transition in
-	let next_states = ref State_set.empty in
-	List.iter (fun (e1, e2) -> 
-		match evaluate e1 ctx runtime modul with
-		| VBool true -> next_states := State_set.add (evaluate e2 ctx runtime modul) !next_states 
-		| VBool false -> ()
-		| _ -> printf "%s should evaluate to a boolean value" (str_expr e1); exit 1
-	) nexts;
-	if State_set.is_empty !next_states then
-		next_states := State_set.singleton s;
+	let next_states = ref State_set.empty in begin
+		match nexts with
+		| Case case_nexts ->
+			List.iter (fun (e1, e2) -> 
+			match evaluate e1 ctx runtime modul with
+			| VBool true -> next_states := State_set.add (evaluate e2 ctx runtime modul) !next_states 
+			| VBool false -> ()
+			| _ -> printf "%s should evaluate to a boolean value" (str_expr e1); exit 1) case_nexts
+		| No_case no_case_nexts -> begin
+				match evaluate no_case_nexts ctx runtime modul with
+				| VLst vl -> next_states := State_set.of_list vl
+				| v -> print_endline ("should be a list of states: "^(str_value v)); exit 1
+			end
+	end;
+	(*if State_set.is_empty !next_states then
+		next_states := State_set.singleton s;*)
 	!next_states
 	(* let sl = evaluate (snd model.transition) ctx runtime modul in
 	match sl with
@@ -268,6 +275,7 @@ and prove_fairs cont runtime modul =
 			List.iter (fun (a, b) -> if a<>"-1" then add_to_false_merge b a) fs
 		);
 		print_endline ("proving formula "^(str_fml fml));
+		
         begin
             match fml with
             | Top -> prove_fairs contl runtime modul
@@ -352,6 +360,7 @@ and prove_fairs cont runtime modul =
 						prove_fairs (generate_EU_cont gamma fairs levl x y fml1 fml2 s next contl contr) runtime modul
 				) 
             | AR (x, y, fml1, fml2, State s) ->
+				print_endline ("number of states in merge: "^(string_of_int (State_set.cardinal (Hashtbl.find merges levl))));
             	(*(
             		if State_set.is_empty gamma
 					then clear_global_merge levl

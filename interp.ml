@@ -10,9 +10,13 @@ type modul = {
     functions: (string, ((pattern list) * expr)) Hashtbl.t;
 }
 
+type trans_def = 
+    | Case of ((expr * expr) list)
+    | No_case of expr
+
 type model = {
     (* transition: (pattern * expr); *)
-    transition : pattern * ((expr * expr) list);
+    transition : pattern * trans_def;
     fairness: formula list;
     properties: (string * formula) list;
 }
@@ -61,8 +65,8 @@ let rec value_of_str_path value strs =
                 if Pairs.key_exists str_value_list str then
                     value_of_str_path (Pairs.get_value str_value_list str) strs'
                 else
-                    raise (Evaluation_error ((str_value value)^" does not have field "^str))
-            | _ -> raise (Evaluation_error ((str_value value)^" should be a record with field "^str))
+                    raise (Evaluation_error (" does not have field "^str^": "^(str_value value)))
+            | _ -> raise (Evaluation_error (" should be a record with field "^str^": "^(str_value value)))
         end
 
 let rec modified_record_value rv str_list value = 
@@ -271,13 +275,13 @@ and evaluate expr ctx runtime modul =
                 let v1 = evaluate e1 ctx runtime modul in begin
                     match v1 with
                     | VInt i -> VInt (-i)
-                    | _ -> raise (Evaluation_error ((str_value v1)^" is not a integer value."))    
+                    | _ -> raise (Evaluation_error ("is not a integer value: "^(str_value v1)))    
                 end
             | "-.", [e1] -> 
                 let v1 = evaluate e1 ctx runtime modul in begin
                     match v1 with
                     | VFloat f -> VFloat (0. -. f)
-                    | _ -> raise (Evaluation_error ((str_value v1)^" is not a float value."))    
+                    | _ -> raise (Evaluation_error ("is not a float value."^(str_value v1)))    
                 end
             | "+", [e1; e2] ->
                 let v1 = evaluate e1 ctx runtime modul 
@@ -370,7 +374,7 @@ and evaluate expr ctx runtime modul =
         else if v1 = VBool false then
             VUnt
         else
-            raise (Evaluation_error ((str_value v1)^" should be a bool value."))
+            raise (Evaluation_error (" should be a bool value: "^(str_value v1)))
     | IF (e1, e2, Some e3) ->
         let v1 = evaluate e1 ctx runtime modul in
         if v1 = VBool true then
@@ -378,7 +382,7 @@ and evaluate expr ctx runtime modul =
         else if v1 = VBool false then
             evaluate e3 ctx runtime modul
         else
-            raise (Evaluation_error ((str_value v1)^" should be a bool value."))
+            raise (Evaluation_error (" should be a bool value: "^(str_value v1)))
     | While (e1, e2) ->
         let v1 = ref (evaluate e1 ctx runtime modul) in
         while (!v1 = VBool true) do
@@ -442,7 +446,7 @@ and evaluate expr ctx runtime modul =
         let v1 = evaluate e1 ctx runtime modul in begin
             match v1 with
             | VRecord str_value_list -> VRecord (List.fold_left (fun svl (str, expr) -> Pairs.replace_first svl str (evaluate expr ctx runtime modul)) str_value_list str_expr_list)
-            | _ -> raise (Evaluation_error ((str_value v1)^" should be a record value."))    
+            | _ -> raise (Evaluation_error ("should be a record value: "^(str_value v1)))    
         end
     | Constr (str, None) -> VConstr (str, None)
     | Constr (str, Some e1) -> VConstr (str, Some (evaluate e1 ctx runtime modul))
@@ -468,8 +472,12 @@ let rec pfmll_to_fml pfmll runtime modul =
 
 
 let pkripke_model_to_model (pkm:pkripke_model) runtime modul = 
+    let trans = 
+    match snd pkm.transition with
+    | PCase case_nexts -> Case (List.map (fun (e1,e2) -> pexprl_to_expr e1, pexprl_to_expr e2) case_nexts)
+    | PNo_case no_case_nexts -> No_case (pexprl_to_expr no_case_nexts) in
     {
-        transition = (ppatl_to_pattern (fst pkm.transition), List.map (fun (e1, e2) -> pexprl_to_expr e1, pexprl_to_expr e2) (snd pkm.transition));
+        transition = (ppatl_to_pattern (fst pkm.transition), trans);
         fairness = List.map (fun pfl -> pfmll_to_fml pfl runtime modul) pkm.fairness;
         properties = List.map (fun (str, pfmll) -> 
         let fml = pfmll_to_fml pfmll runtime modul in
@@ -491,7 +499,7 @@ let pkripke_model_to_model (pkm:pkripke_model) runtime modul =
 
 let pmoduls_to_runtime pmoduls pkripke_model start_modul =
     let dummy_kripke_model = {
-        transition = (Pat_Symbol "", []);
+        transition = (Pat_Symbol "", Case []);
         fairness = [];
         properties = [];
     } in

@@ -112,13 +112,17 @@ args: pattern {[$1]}
     | pattern args  {$1 :: $2}
 ;    
 
-kripke: Model LB3 states Next p = pattern Equal nexts = transition_items fair = separated_list(Semicolon, formula) pl = list(property) RB3    {
+kripke: Model LB3 states Next p = pattern Equal nexts = transition_def fair = separated_list(Semicolon, formula) pl = list(property) RB3    {
             kripke_model := Some {
                 transition = (p, nexts);
                 fairness = fair;
                 properties = pl;
             }
         } 
+;
+
+transition_def: transition_items {PCase $1}
+    | expr  {PNo_case $1}
 ;
 
 transition_items: e1 = expr_single Colon e2 = expr_single Semicolon {[(e1, e2)]}
@@ -144,6 +148,7 @@ formula: Top {mk_pformula_loc PTop $startpos($1) $endpos($1)}
     | EG LB1 id = Iden Comma f = formula Comma e = expr_single RB1 {mk_pformula_loc (PEG (id, f, e)) $startpos($1) $endpos($8)}
     | AR LB1 id1 = Iden Comma id2 = Iden Comma f1 = formula Comma f2 = formula Comma e = expr_single RB1 {mk_pformula_loc (PAR (id1, id2, f1, f2, e)) $startpos($1) $endpos($12)}
     | EU LB1 id1 = Iden Comma id2 = Iden Comma f1 = formula Comma f2 = formula Comma e = expr_single RB1 {mk_pformula_loc (PEU (id1, id2, f1, f2, e)) $startpos($1) $endpos($12)}
+    | LB1 formula RB1 {$2}
 ;
 
 constrs: c = constr {[c]}
