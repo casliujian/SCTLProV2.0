@@ -19,12 +19,12 @@ all:
 opt:
 	make -C utils opt
 	ocamlopt -c ast.ml
+	ocamlopt -c print.ml
 	menhir --infer --explain parser.mly
 	ocamlopt -c parser.mli
 	ocamlopt -c parser.ml
 	ocamllex lexer.mll
 	ocamlopt -c lexer.ml
-	ocamlopt -c print.ml
 	ocamlopt -I utils -c utils.cmxa typechecker.ml
 	ocamlopt -I utils -c utils.cmxa expr.ml
 	ocamlopt -c formula.ml
@@ -32,7 +32,7 @@ opt:
 	ocamlopt -I utils -c utils.cmxa interp.ml
 	ocamlopt -c prove.ml
 	ocamlopt -c main.ml
-	ocamlopt -I utils -o sctlprov2 utils.cmxa ast.cmx parser.cmx lexer.cmx print.cmx typechecker.cmx expr.cmx formula.cmx dep.cmx interp.cmx prove.cmx main.cmx
+	ocamlopt -I utils -o sctlprov2 utils.cmxa ast.cmx print.cmx parser.cmx lexer.cmx typechecker.cmx expr.cmx formula.cmx dep.cmx interp.cmx prove.cmx main.cmx
 
 
 debug:

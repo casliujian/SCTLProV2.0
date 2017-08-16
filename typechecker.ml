@@ -614,7 +614,7 @@ let rec check_pel_type pel env tctx modul moduls =
         let env4 = unify [PTBool; pel.ptyp] modul moduls in
         (merge_env (merge_env env3 env4) env2, tctx)
       | str, _ ->(***reimplement this part***)
-        print_endline ("checking type of function "^str);
+        (* print_endline ("checking type of function "^str); *)
         let ptf = type_of_str str modul moduls in
         let env0 = ref env in
         List.iter (fun pel ->
@@ -853,17 +853,17 @@ let check_modul modul moduls =
         let env1 = merge_env (unify [ptyp; pel.ptyp] modul moduls) env in
         let ptyp1 = apply_env_to_ptyp env1 ptyp in
         apply_env_to_pel env1 pel;
-        Hashtbl.replace m.psymbol_tbl str (Val, PExpr_loc (ptyp1, pel));
-        print_endline ("type check value "^str^" complete.")
+        Hashtbl.replace m.psymbol_tbl str (Val, PExpr_loc (ptyp1, pel))
+        (* print_endline ("type check value "^str^" complete.") *)
       | (Var, PExpr_loc (ptyp, pel)) -> 
         let env,_ = check_pel_type pel [] [] modul moduls in
         let env1 = merge_env (unify [ptyp; pel.ptyp] modul moduls) env in
         let ptyp1 = apply_env_to_ptyp env1 ptyp in
         apply_env_to_pel env1 pel;
-        Hashtbl.replace m.psymbol_tbl str (Var, PExpr_loc (ptyp1, pel));
-        print_endline ("type check variable "^str^" complete.")
+        Hashtbl.replace m.psymbol_tbl str (Var, PExpr_loc (ptyp1, pel))
+        (* print_endline ("type check variable "^str^" complete.") *)
       | (Function, PFunction (ptyp, ppatl_list, pel)) -> 
-        print_endline ("type checking function "^str);
+        (* print_endline ("type checking function "^str); *)
         let rec build_arrow ptyp_list ptyp1 = 
           match ptyp_list with
           | [] -> ptyp1
@@ -879,8 +879,8 @@ let check_modul modul moduls =
         let env2 = merge_env (unify [ptyp; build_arrow (List.map (fun ppatl->ppatl.ptyp) ppatl_list) pel.ptyp] modul moduls) env1 in
         List.iter (fun ppatl->apply_env_to_ppatl env2 ppatl) ppatl_list;
         apply_env_to_pel env2 pel;
-        Hashtbl.replace m.psymbol_tbl str (Function, PFunction (apply_env_to_ptyp env2 ptyp, ppatl_list, pel));
-        print_endline ("type check function "^str^" complete.")
+        Hashtbl.replace m.psymbol_tbl str (Function, PFunction (apply_env_to_ptyp env2 ptyp, ppatl_list, pel))
+        (* print_endline ("type check function "^str^" complete.") *)
       | _ -> ()
     ) m.psymbol_tbl;
      match m.pkripke_model with

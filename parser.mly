@@ -89,17 +89,17 @@ declars: {}
 ;
 
 declare: Datatype id = Iden args = list(Iden) Equal t = type_def  {
-            print_endline ("declared type: "^id^": "^(Print.str_ptyp t));
+            (* print_endline ("declared type: "^id^": "^(Print.str_ptyp t)); *)
             Hashtbl.add symbol_tbl id (UDT, PTyp (erase_type_args t args))
         } 
     | Value id = Iden ote = option(type_of_expr)  Equal e = expr_single  {
-            print_endline ("declared value "^id);
+            (* print_endline ("declared value "^id); *)
             match ote with
             | None -> Hashtbl.add symbol_tbl id (Val, PExpr_loc (PTVar (new_type_var ()), e))
             | Some pt -> Hashtbl.add symbol_tbl id (Val, PExpr_loc (pt, e))
         }
     | Function id = Iden ags = args otf = option(type_of_expr) Equal e = expr  {
-        print_endline ("declared function "^id);
+        (* print_endline ("declared function "^id); *)
         match otf with
         | None -> Hashtbl.add symbol_tbl id (Function, PFunction(PTVar (new_type_var ()), ags, e))
         | Some pt -> Hashtbl.add symbol_tbl id (Function, PFunction(pt, ags, e))}
@@ -159,7 +159,7 @@ type_def: typ {$1}
     | constrs {PTConstrs $1}
 ;
 
-constr: uid = UIden {print_endline ("found constr "^uid); (uid, None)}
+constr: uid = UIden {(*print_endline ("found constr "^uid);*) (uid, None)}
      | uid = UIden t = typ {(uid, Some t)} 
 ; 
 

@@ -5,7 +5,7 @@ open Printf
 
 module State_key = struct
 	type t = value
-	let compare = value_compare
+	let compare = Pervasives.compare
 end;;
 module State_set = Set.Make(State_key)
 
@@ -24,12 +24,17 @@ let next s runtime modul =
 			| _ -> printf "%s should evaluate to a boolean value" (str_expr e1); exit 1) case_nexts
 		| No_case no_case_nexts -> begin
 				match evaluate no_case_nexts ctx runtime modul with
-				| VLst vl -> next_states := State_set.of_list vl
+				| VLst vl -> 
+					next_states := State_set.of_list vl
 				| v -> print_endline ("should be a list of states: "^(str_value v)); exit 1
 			end
 	end;
 	(*if State_set.is_empty !next_states then
 		next_states := State_set.singleton s;*)
+	if State_set.is_empty !next_states then begin
+		print_endline ("deadlock detected in state: "^(str_value s));
+		exit 1
+	end;
 	!next_states
 	(* let sl = evaluate (snd model.transition) ctx runtime modul in
 	match sl with
@@ -281,7 +286,7 @@ and prove_fairs cont runtime modul =
             | Top -> prove_fairs contl runtime modul
             | Bottom -> prove_fairs contr runtime modul
 			| Atomic (s, sl) -> 
-				print_endline ("proving formula "^(str_fml fml));
+				(* print_endline ("proving formula "^(str_fml fml)); *)
 				if prove_atomic s sl runtime modul then prove_fairs contl runtime modul else prove_fairs contr runtime modul
 			| Neg (Atomic (s, sl)) -> if prove_atomic s sl runtime modul then prove_fairs contr runtime modul else prove_fairs contl runtime modul
             | Neg fml1 -> prove_fairs (Cont (gamma, fairs, levl^"1", fml1, contr, contl, [], [])) runtime modul
@@ -362,7 +367,7 @@ and prove_fairs cont runtime modul =
 						prove_fairs (generate_EU_cont gamma fairs levl x y fml1 fml2 s next contl contr) runtime modul
 				) 
             | AR (x, y, fml1, fml2, State s) ->
-				print_endline ("number of states in merge: "^(string_of_int (State_set.cardinal (Hashtbl.find merges levl))));
+				(* print_endline ("number of states in merge: "^(string_of_int (State_set.cardinal (Hashtbl.find merges levl)))); *)
             	(*(
             		if State_set.is_empty gamma
 					then clear_global_merge levl

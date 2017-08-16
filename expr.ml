@@ -277,7 +277,20 @@ let rec str_value v =
   | VConstr (str, None) -> str
   | VConstr (str, Some v1) -> str^" "^(str_value v1)
 
-let rec value_list_compare vl1 vl2 = 
+let rec record_compare str_vl1 str_vl2 = 
+    match str_vl1, str_vl2 with
+    | [],[] -> 0
+    | (s1, v1)::str_vls1, (s2, v2)::str_vls2 ->
+        if s1 = "nextmahf" || s1 = "nextseq" then
+            record_compare str_vls1 str_vls2
+        else
+            let c = value_compare v1 v2 in
+            if c <> 0 then
+                c
+            else
+                record_compare str_vls1 str_vls2  
+
+and value_list_compare vl1 vl2 = 
     match vl1, vl2 with
     | [], [] -> 0
     | v1::vls1, v2::vls2 -> 
@@ -296,7 +309,8 @@ and value_compare v1 v2 =
     | VAray va1, VAray va2 -> value_list_compare va1 va2
     | VLst vl1, VLst vl2 -> value_list_compare vl1 vl2
     | VTuple vt1, VTuple vt2 -> value_list_compare vt1 vt2
-    | VRecord vr1, VRecord vr2 -> value_list_compare (List.map (fun (s1, v1) -> v1) vr1) (List.map (fun (s1, v1) -> v1) vr2)
+    | VRecord vr1, VRecord vr2 -> (*record_compare vr1 vr2*)
+        value_list_compare (List.map (fun (s1, v1) -> v1) vr1) (List.map (fun (s1, v1) -> v1) vr2)
     | VConstr (str1, None), VConstr (str2, None) -> Pervasives.compare str1 str2
     | VConstr (str1, Some v1), VConstr (str2, Some v2) -> 
         let sc = Pervasives.compare str1 str2 in
