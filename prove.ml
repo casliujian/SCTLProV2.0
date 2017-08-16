@@ -274,13 +274,15 @@ and prove_fairs cont runtime modul =
 			List.iter (fun (a, b) -> if a<>"-1" then add_to_true_merge b a) ts;
 			List.iter (fun (a, b) -> if a<>"-1" then add_to_false_merge b a) fs
 		);
-		print_endline ("proving formula "^(str_fml fml));
+		(* print_endline ("proving formula "^(str_fml fml)); *)
 		
         begin
             match fml with
             | Top -> prove_fairs contl runtime modul
             | Bottom -> prove_fairs contr runtime modul
-            | Atomic (s, sl) -> if prove_atomic s sl runtime modul then prove_fairs contl runtime modul else prove_fairs contr runtime modul
+			| Atomic (s, sl) -> 
+				print_endline ("proving formula "^(str_fml fml));
+				if prove_atomic s sl runtime modul then prove_fairs contl runtime modul else prove_fairs contr runtime modul
 			| Neg (Atomic (s, sl)) -> if prove_atomic s sl runtime modul then prove_fairs contr runtime modul else prove_fairs contl runtime modul
             | Neg fml1 -> prove_fairs (Cont (gamma, fairs, levl^"1", fml1, contr, contl, [], [])) runtime modul
             | And (fml1, fml2) -> 

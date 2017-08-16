@@ -79,7 +79,7 @@ function is_first a : aircraft -> bool =
 
 // Leading sequence of leader aircraft
 function leader a : aircraft -> int = 
-	if a.seq = none then none else a.seq - 1
+	if a.seq = none then none else (a.seq - 1)
 
 // Is b the leader aircraft of a?
 function is_leader a b : aircraft -> aircraft -> bool = 
@@ -96,7 +96,7 @@ function assigned z s : (list aircraft) -> side -> int =
 	else 
 		let (fz, rz) = (first_of_list z, remove_first z);
 		if fz.mahf = s then 
-			1 + (assigned (rz) s)
+			(1 + (assigned (rz) s))
 		else 
 			assigned (rz) s
 	
@@ -609,7 +609,7 @@ function departing si this : side -> sca -> (list sca) =
 // **********************Defining related properties**************************
 // No more than four simultaneous landing operations
 function four_landings s : sca -> bool = 
-	(landing_op s) <= 4 && (s.nextseq - 1) <= (landing_op s)
+	(landing_op s) <= 4 && ((s.nextseq - 1) <= (landing_op s))
 
 // No more than 2 aircraft assigned to each missed approach fix. Moreover,
 // no more than 2 aircraft at each side of the sca (excluding the approach).
@@ -719,7 +719,7 @@ value init : sca = {
 	intermediate = [];
 	final = [];
 	runway = [];
-	nextmahf = Left;
+	nextmahf = Right;
 	nextseq = 1;
 //	nextid = 0;
 //	rule = 0;
@@ -744,6 +744,6 @@ Model {
 		(departing (Left) s) @ (departing (Right) s)
 	
 //	property eg_corr = EG (x, invariant x, init)
-	property correctness = EU (x, y, TRUE, not (invariant y), init)
+	property correctness = AR (x, y, FALSE, (invariant y), init)
 }
 
