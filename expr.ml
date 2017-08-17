@@ -281,7 +281,7 @@ let rec record_compare str_vl1 str_vl2 =
     match str_vl1, str_vl2 with
     | [],[] -> 0
     | (s1, v1)::str_vls1, (s2, v2)::str_vls2 ->
-        if s1 = "nextmahf" || s1 = "nextseq" then
+        if s1 = "nextmahf" then
             record_compare str_vls1 str_vls2
         else
             let c = value_compare v1 v2 in
