@@ -291,6 +291,7 @@ let rec record_compare str_vl1 str_vl2 =
                 record_compare str_vls1 str_vls2  
 
 and value_list_compare vl1 vl2 = 
+    (* Pervasives.compare (List.length vl1) (List.length vl2) *)
     match vl1, vl2 with
     | [], [] -> 0
     | v1::vls1, v2::vls2 -> 

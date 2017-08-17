@@ -385,7 +385,8 @@ and prove_fairs cont runtime modul =
 				 (
 					(if State_set.is_empty gamma
 					then clear_global_merge levl
-					else add_to_global_merge gamma levl;
+					else 
+						add_to_global_merge gamma levl
 					(*print_endline ("AR merge size: "^(string_of_int (State_set.cardinal (Hashtbl.find merges levl))))*)
 					);		
 					if in_global_merge s levl
