@@ -762,25 +762,45 @@ value init : sca = {
 //	rule = 0;
 }
 
-Model {
-	next s = 
-		(vertical_entry (Left) s) @ (vertical_entry (Right) s) @
-		(lateral_entry (Left) s) @ (lateral_entry (Right) s) @
-		(holding_pattern_descend (Left) s) @ (holding_pattern_descend (Right) s) @
-		(vertical_approach_initiation (Left) s) @ (vertical_approach_initiation (Right) s) @
-		(lateral_approach_initiation (Left) s) @ (lateral_approach_initiation (Right) s) @
-//		(merging (Left) s) @ (merging (Right) s) @
-		(exit s) @
-		(final_segment s) @
-		(landing s) @
-		(taxing s) @
-		(missed_approach s) @
-		(lowest_avaliable_altitude (Left) s) @ (lowest_avaliable_altitude (Right) s) @
-		(departure_initiation (Left) s) @ (departure_initiation (Right) s) @
-		(takeoff s) @ 
-		(departing (Left) s) @ (departing (Right) s)
-	
-//	property eg_corr = EG (x, invariant x, init)
-	property correctness = AR (x, y, FALSE, (invariant y), init)
+// SCA will be empty again
+function empty_again this : sca -> bool = 
+	(length this.holding3_left) = 0 && (length this.holding3_right) = 0 &&
+	(length this.holding2_left) = 0 && (length this.holding2_right) = 0 &&
+	(length this.lez_left) = 0 && (length this.lez_right) = 0 &&
+	(length this.maz_left) = 0 && (length this.maz_right) = 0 &&
+	(length this.departure_left) = 0 && (length this.departure_right) = 0 &&
+	(length this.intermediate) = 0 && (length this.final) = 0 &&
+	(length this.runway) = 0
+
+Model SATS () 
+{
+	Transition {
+		next s := 
+			(vertical_entry (Left) s) @ (vertical_entry (Right) s) @
+			(lateral_entry (Left) s) @ (lateral_entry (Right) s) @
+			(holding_pattern_descend (Left) s) @ (holding_pattern_descend (Right) s) @
+			(vertical_approach_initiation (Left) s) @ (vertical_approach_initiation (Right) s) @
+			(lateral_approach_initiation (Left) s) @ (lateral_approach_initiation (Right) s) @
+	//		(merging (Left) s) @ (merging (Right) s) @
+			(exit s) @
+			(final_segment s) @
+			(landing s) @
+			(taxing s) @
+			(missed_approach s) @
+			(lowest_avaliable_altitude (Left) s) @ (lowest_avaliable_altitude (Right) s) @
+			(departure_initiation (Left) s) @ (departure_initiation (Right) s) @
+			(takeoff s) @ 
+			(departing (Left) s) @ (departing (Right) s)
+	}
+
+	Atomic {
+		atom_correct (s) := invariant s;
+		atom_empty_again (s) := empty_again s;
+	}
+
+	Spec {
+		correctness := AR (x, y, FALSE, atom_correct (y), init);
+		emergency := AX (x, AF(y, atom_empty_again (y), x), init);
+	}
 }
 

@@ -726,36 +726,39 @@ let rec check_pformulal_type pfml tctx modul moduls =
   match pfml.pfml with
   | PAtomic (str, pel_list) -> 
     let env0 = ref [] in
-    List.iter (fun pel ->
-      let env, _ = check_pel_type pel !env0 tctx modul moduls in
-      env0 := env
+    List.iter (fun ps ->
+      match ps with
+      | PSVar _ -> ()
+      | PState pel -> 
+        let env, _ = check_pel_type pel !env0 tctx modul moduls in
+        env0 := env
     ) pel_list;
     !env0
   | PNeg pfml1 -> check_pformulal_type pfml1 tctx modul moduls
   | PAnd (pfml1, pfml2) -> merge_env (check_pformulal_type pfml1 tctx modul moduls) (check_pformulal_type pfml2 tctx modul moduls)
   | POr (pfml1, pfml2) -> merge_env (check_pformulal_type pfml1 tctx modul moduls) (check_pformulal_type pfml2 tctx modul moduls)
-  | PAX (x, pfml1, pel) -> 
+  | PAX (x, pfml1, PState pel) -> 
     let env,_ = (check_pel_type pel [] tctx modul moduls) in
     let tctx1 = (x, pel.ptyp)::tctx in
     merge_env (check_pformulal_type pfml1 tctx1 modul moduls) env
-  | PEX (x, pfml1, pel) -> 
+  | PEX (x, pfml1, PState pel) -> 
     let env,_ = (check_pel_type pel [] tctx modul moduls) in
     let tctx1 = (x, pel.ptyp)::tctx in
     merge_env (check_pformulal_type pfml1 tctx1 modul moduls) env
-  | PAF (x, pfml1, pel) -> 
+  | PAF (x, pfml1, PState pel) -> 
     let env,_ = (check_pel_type pel [] tctx modul moduls) in
     let tctx1 = (x, pel.ptyp)::tctx in
     merge_env (check_pformulal_type pfml1 tctx1 modul moduls) env
-  | PEG (x, pfml1, pel) -> 
+  | PEG (x, pfml1, PState pel) -> 
     let env,_ = (check_pel_type pel [] tctx modul moduls) in
     let tctx1 = (x, pel.ptyp)::tctx in
     merge_env (check_pformulal_type pfml1 tctx1 modul moduls) env
-  | PAR (x,y, pfml1, pfml2, pel) -> 
+  | PAR (x,y, pfml1, pfml2, PState pel) -> 
     let env,_ = check_pel_type pel [] tctx modul moduls in
     let tctx1 = (x, pel.ptyp)::tctx 
     and tctx2 = (y, pel.ptyp)::tctx in
     merge_env (merge_env (check_pformulal_type pfml1 tctx1 modul moduls) (check_pformulal_type pfml2 tctx2 modul moduls)) env
-  | PEU (x,y, pfml1, pfml2, pel) -> 
+  | PEU (x,y, pfml1, pfml2, PState pel) -> 
     let env,_ = check_pel_type pel [] tctx modul moduls in
     let tctx1 = (x, pel.ptyp)::tctx 
     and tctx2 = (y, pel.ptyp)::tctx in
@@ -831,16 +834,21 @@ let rec apply_env_to_pel env (pel:pexpr_loc) =
 
 let rec apply_env_to_pformulal env pfml =
   match pfml.pfml with
-  | PAtomic (str, pel_list) -> List.iter (fun pel->apply_env_to_pel env pel) pel_list
+  | PAtomic (str, pel_list) -> 
+      List.iter (fun ps->
+        match ps with
+        | PSVar _ -> ()
+        | PState pel -> apply_env_to_pel env pel
+      ) pel_list
   | PNeg pfml1 -> apply_env_to_pformulal env pfml1
   | PAnd (pfml1, pfml2) -> apply_env_to_pformulal env pfml1; apply_env_to_pformulal env pfml2
   | POr (pfml1, pfml2) -> apply_env_to_pformulal env pfml1; apply_env_to_pformulal env pfml2
-  | PAX (_, pfml1, pel) -> apply_env_to_pformulal env pfml1; apply_env_to_pel env pel
-  | PEX (_, pfml1, pel) -> apply_env_to_pformulal env pfml1; apply_env_to_pel env pel
-  | PAF (_, pfml1, pel) -> apply_env_to_pformulal env pfml1; apply_env_to_pel env pel
-  | PEG (_, pfml1, pel) -> apply_env_to_pformulal env pfml1; apply_env_to_pel env pel
-  | PAR (_,_, pfml1, pfml2, pel) -> apply_env_to_pformulal env pfml1; apply_env_to_pformulal env pfml2; apply_env_to_pel env pel
-  | PEU (_,_, pfml1, pfml2, pel) -> apply_env_to_pformulal env pfml1; apply_env_to_pformulal env pfml2; apply_env_to_pel env pel
+  | PAX (_, pfml1, PState pel) -> apply_env_to_pformulal env pfml1; apply_env_to_pel env pel
+  | PEX (_, pfml1, PState pel) -> apply_env_to_pformulal env pfml1; apply_env_to_pel env pel
+  | PAF (_, pfml1, PState pel) -> apply_env_to_pformulal env pfml1; apply_env_to_pel env pel
+  | PEG (_, pfml1, PState pel) -> apply_env_to_pformulal env pfml1; apply_env_to_pel env pel
+  | PAR (_,_, pfml1, pfml2, PState pel) -> apply_env_to_pformulal env pfml1; apply_env_to_pformulal env pfml2; apply_env_to_pel env pel
+  | PEU (_,_, pfml1, pfml2, PState pel) -> apply_env_to_pformulal env pfml1; apply_env_to_pformulal env pfml2; apply_env_to_pel env pel
   | _ -> ()
 
 let check_modul modul moduls = 
@@ -907,7 +915,11 @@ let check_modul modul moduls =
             apply_env_to_ppatl tmp_env (fst kripke.transition);
             apply_env_to_pel tmp_env no_case_nexts
         end;
-        
+
+        (* Hashtbl.iter (fun str (args, pel) -> 
+          let tmp_env,_ = check_pel_type pel env tctx modul moduls in
+          apply_env_to_pel tmp_env pel
+        ) kripke.atomic; *)
         (* let env2, _ = check_pel_type (snd kripke.transition) env1 tctx1 modul moduls in
         apply_env_to_ppatl env2 (fst kripke.transition);
         apply_env_to_pel env2 (snd kripke.transition); *)

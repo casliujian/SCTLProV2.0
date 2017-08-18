@@ -161,23 +161,29 @@ let rec str_pexprl pel =
     in
     (str_pexpr (pel.pexpr))^":"^(str_ptyp (pel.ptyp))
 
+let str_pstate ps = 
+    match ps with
+    | PSVar str -> str
+    | PState pel -> str_pexprl pel
+
+
 let rec str_pformulal (pfml:pformula_loc) = 
     match pfml.pfml with
     | PTop -> "TRUE"
     | PBottom -> "FALSE"
     | PAtomic (str, pel_list) -> 
         let tmp_str = ref str in
-        List.iter (fun pel-> tmp_str:=!tmp_str^" "^(str_pexprl pel)) pel_list;
+        List.iter (fun pel-> tmp_str:=!tmp_str^" "^(str_pstate pel)) pel_list;
         !tmp_str
     | PNeg pfml1 -> "not ("^(str_pformulal pfml1)^")"
     | PAnd (pfml1, pfml2) -> "("^(str_pformulal pfml1)^") /\\ ("^(str_pformulal pfml2)^")"
     | POr (pfml1, pfml2) -> "("^(str_pformulal pfml1)^") \\/ ("^(str_pformulal pfml2)^")"
-    | PAX (str, pfml1, pel) -> "AX ("^str^","^(str_pformulal pfml1)^","^(str_pexprl pel)^")"
-    | PEX (str, pfml1, pel) -> "EX ("^str^","^(str_pformulal pfml1)^","^(str_pexprl pel)^")"
-    | PAF (str, pfml1, pel) -> "AF ("^str^","^(str_pformulal pfml1)^","^(str_pexprl pel)^")"
-    | PEG (str, pfml1, pel) -> "EG ("^str^","^(str_pformulal pfml1)^","^(str_pexprl pel)^")"
-    | PAR (str1, str2, pfml1, pfml2, pel) -> "AR ("^str1^","^str2^","^(str_pformulal pfml1)^","^(str_pformulal pfml2)^","^(str_pexprl pel)^")"
-    | PEU (str1, str2, pfml1, pfml2, pel) -> "EU ("^str1^","^str2^","^(str_pformulal pfml1)^","^(str_pformulal pfml2)^","^(str_pexprl pel)^")"
+    | PAX (str, pfml1, pel) -> "AX ("^str^","^(str_pformulal pfml1)^","^(str_pstate pel)^")"
+    | PEX (str, pfml1, pel) -> "EX ("^str^","^(str_pformulal pfml1)^","^(str_pstate pel)^")"
+    | PAF (str, pfml1, pel) -> "AF ("^str^","^(str_pformulal pfml1)^","^(str_pstate pel)^")"
+    | PEG (str, pfml1, pel) -> "EG ("^str^","^(str_pformulal pfml1)^","^(str_pstate pel)^")"
+    | PAR (str1, str2, pfml1, pfml2, pel) -> "AR ("^str1^","^str2^","^(str_pformulal pfml1)^","^(str_pformulal pfml2)^","^(str_pstate pel)^")"
+    | PEU (str1, str2, pfml1, pfml2, pel) -> "EU ("^str1^","^str2^","^(str_pformulal pfml1)^","^(str_pformulal pfml2)^","^(str_pstate pel)^")"
 
 let str_modul modul =
     let tmp_str = ref (modul.fname^"\n") in

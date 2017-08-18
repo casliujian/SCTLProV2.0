@@ -96,19 +96,22 @@ and ppattern =
 and pconstr = 
     | PConstr_basic of string
     | PConstr_compound of string * pexpr_loc
+and pstate = 
+    | PSVar of string
+    | PState of pexpr_loc
 and pformula = 
     | PTop
     | PBottom
-    | PAtomic of string * (pexpr_loc list)
+    | PAtomic of string * (pstate list)
     | PNeg of pformula_loc
     | PAnd of pformula_loc * pformula_loc
     | POr of pformula_loc * pformula_loc
-    | PAX of string * pformula_loc * pexpr_loc 
-    | PEX of string * pformula_loc * pexpr_loc
-    | PAF of string * pformula_loc * pexpr_loc
-    | PEG of string * pformula_loc * pexpr_loc
-    | PAR of string * string * pformula_loc * pformula_loc * pexpr_loc
-    | PEU of string * string * pformula_loc * pformula_loc * pexpr_loc
+    | PAX of string * pformula_loc * pstate 
+    | PEX of string * pformula_loc * pstate
+    | PAF of string * pformula_loc * pstate
+    | PEG of string * pformula_loc * pstate
+    | PAR of string * string * pformula_loc * pformula_loc * pstate
+    | PEU of string * string * pformula_loc * pformula_loc * pstate
 and pformula_loc = {
     pfml: pformula;
     loc: location;
@@ -127,6 +130,7 @@ type ptrans_def =
 type pkripke_model = {
     transition : ppattern_loc * ptrans_def;
     fairness: pformula_loc list;
+    atomic: (string, (string list) * pexpr_loc) Hashtbl.t;
     properties: (string * pformula_loc) list;
 }
 type pmodul = {

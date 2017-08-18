@@ -46,6 +46,12 @@ rule token = parse
   | "of"        {Of}
   | "state"     {State}
   | "next"      {Next}
+  | "Var"       {Var}
+  | "Init"      {Init}
+  | "Transition"  {Transition}
+  | "Atomic"    {Atomic}
+  | "Fairness"  {Fairness}
+  | "Spec"      {Spec}
   | integer as i  {Int (int_of_string i)}
   | float as f    {Float (float_of_string f)}
   | iden as id  {Iden id}
@@ -83,6 +89,7 @@ rule token = parse
   | "-."        {MinusDot}
   | "*"         {Mult}
   | "*."        {MultDot}
+  | ":="        {Assigno}
   | "@"         {At}
   | nl        {Lexing.new_line lexbuf; token lexbuf}
   | [' ' '\t']+  {token lexbuf}

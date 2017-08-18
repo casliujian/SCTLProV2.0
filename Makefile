@@ -3,8 +3,8 @@ all:
 	ocamlc -c ast.ml
 	ocamlc -c print.ml
 	menhir --infer --explain parser.mly
-	ocamlc -c parser.mli
-	ocamlc -c parser.ml
+	ocamlc -I utils -c utils.cma parser.mli
+	ocamlc -I utils -c utils.cma parser.ml
 	ocamllex lexer.mll
 	ocamlc -c lexer.ml
 	ocamlc -I utils -c utils.cma typechecker.ml
@@ -12,7 +12,7 @@ all:
 	ocamlc -c formula.ml
 	ocamlc -c dep.ml
 	ocamlc -I utils -c utils.cma interp.ml
-	ocamlc -c prove.ml
+	ocamlc -I utils -c utils.cma prove.ml
 	ocamlc -c main.ml
 	ocamlc -I utils -o sctlprov2 utils.cma ast.cmo print.cmo parser.cmo lexer.cmo typechecker.cmo expr.cmo formula.cmo dep.cmo interp.cmo prove.cmo main.cmo
 

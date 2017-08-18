@@ -244,6 +244,14 @@ let prove_atomic s sl runtime modul =
 		| SVar _ -> raise Error_proving_atomic
 		| State value -> value
 	) sl in
+	try
+		let (paras, expr) = Hashtbl.find runtime.model.atomic s in
+		let ctx = Lists.zip_to_refpairs paras args in
+		match evaluate expr ctx runtime modul with
+		| VBool b -> b
+		| _ -> raise (Error_proving_atomic)
+	with Not_found -> print_endline ("definition of atomic function "^s^" is missing."); exit 1
+(* 
 	let pats, e1 = find_function s runtime modul in
     if List.length args <> List.length pats then 
         raise (Evaluation_error ("function "^s^" has "^(string_of_int (List.length pats))^" parameters, but is applied to "^(string_of_int (List.length args))^" arguments."))
@@ -257,8 +265,8 @@ let prove_atomic s sl runtime modul =
         let result = evaluate e1 (!ctx0) runtime modul in
         match result with
         | VBool b -> b
-        | _ -> raise (Error_proving_atomic)
-    end
+        | _ -> raise (Error_proving_atomic) 
+    end*)
 
 let rec satisfy_fair fml s runtime modul =
 	prove_fairs (Cont(State_set.empty, [], "0", subst_s fml ("s") (State s), Basic true, Basic false, [], [])) runtime modul

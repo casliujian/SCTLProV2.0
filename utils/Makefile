@@ -2,13 +2,15 @@ all:
 	ocamlc -c options.ml
 	ocamlc -c pairs.ml
 	ocamlc -c refpairs.ml
-	ocamlc -a -o utils.cma options.cmo pairs.cmo refpairs.cmo
+	ocamlc -c lists.ml
+	ocamlc -a -o utils.cma options.cmo pairs.cmo refpairs.cmo lists.cmo
 
 opt:
 	ocamlopt -c options.ml
 	ocamlopt -c pairs.ml
 	ocamlopt -c refpairs.ml
-	ocamlopt -a -o utils.cmxa options.cmx pairs.cmx refpairs.cmx
+	ocamlopt -c lists.ml
+	ocamlopt -a -o utils.cmxa options.cmx pairs.cmx refpairs.cmx lists.cmx
 
 
 clean:

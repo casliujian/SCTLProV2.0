@@ -5,6 +5,7 @@ type state =
 	  SVar of string
 	| State of value
 
+
 let str_state s = 
 	match s with
 	| SVar str -> str

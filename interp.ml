@@ -17,6 +17,7 @@ type trans_def =
 type model = {
     (* transition: (pattern * expr); *)
     transition : pattern * trans_def;
+    atomic: (string, (string list)*expr) Hashtbl.t;
     fairness: formula list;
     properties: (string * formula) list;
 }
@@ -451,26 +452,47 @@ and evaluate expr ctx runtime modul =
     | Constr (str, None) -> VConstr (str, None)
     | Constr (str, Some e1) -> VConstr (str, Some (evaluate e1 ctx runtime modul))
             
+
+let pstate_to_state ps runtime modul = 
+    match ps with
+    | PSVar str -> SVar str
+    | PState pst -> State (evaluate (pexprl_to_expr pst) [] runtime modul)
+    
 let rec pfmll_to_fml pfmll runtime modul = 
-  match pfmll.pfml with
-  | PTop -> Top 
-  | PBottom -> Bottom
-  | PAtomic (str, pels) -> Atomic (str, List.map (fun pel -> 
-        match pel.pexpr with
-        | PSymbol [s] -> SVar s
-        | _ -> State (evaluate (pexprl_to_expr pel) [] runtime modul)
-    ) pels)
-  | PNeg pfml1 -> Neg (pfmll_to_fml pfml1 runtime modul)
-  | PAnd (pfml1, pfml2) -> And (pfmll_to_fml pfml1 runtime modul, pfmll_to_fml pfml2 runtime modul)
-  | POr (pfml1, pfml2) -> Or (pfmll_to_fml pfml1 runtime modul, pfmll_to_fml pfml2 runtime modul)
-  | PAX (str, pfml1, pel1) -> AX (str, pfmll_to_fml pfml1 runtime modul, State (evaluate (pexprl_to_expr pel1) [] runtime modul))
-  | PEX (str, pfml1, pel1) -> EX (str, pfmll_to_fml pfml1 runtime modul, State (evaluate (pexprl_to_expr pel1) [] runtime modul))
-  | PAF (str, pfml1, pel1) -> AF (str, pfmll_to_fml pfml1 runtime modul, State (evaluate (pexprl_to_expr pel1) [] runtime modul))
-  | PEG (str, pfml1, pel1) -> EG (str, pfmll_to_fml pfml1 runtime modul, State (evaluate (pexprl_to_expr pel1) [] runtime modul))
-  | PAR (str1, str2, pfml1, pfml2, pel1) -> AR (str1, str2, pfmll_to_fml pfml1 runtime modul, pfmll_to_fml pfml2 runtime modul, State (evaluate (pexprl_to_expr pel1) [] runtime modul))
-  | PEU (str1, str2, pfml1, pfml2, pel1) -> EU (str1, str2, pfmll_to_fml pfml1 runtime modul, pfmll_to_fml pfml2 runtime modul, State (evaluate (pexprl_to_expr pel1) [] runtime modul))
-
-
+    match pfmll.pfml with
+    | PTop -> Top 
+    | PBottom -> Bottom
+    | PAtomic (str, pels) -> Atomic (str, List.map (fun pel -> 
+            pstate_to_state pel runtime modul
+        ) pels)
+    | PNeg pfml1 -> Neg (pfmll_to_fml pfml1 runtime modul)
+    | PAnd (pfml1, pfml2) -> And (pfmll_to_fml pfml1 runtime modul, pfmll_to_fml pfml2 runtime modul)
+    | POr (pfml1, pfml2) -> Or (pfmll_to_fml pfml1 runtime modul, pfmll_to_fml pfml2 runtime modul)
+    | PAX (str, pfml1, pel1) -> AX (str, pfmll_to_fml pfml1 runtime modul, pstate_to_state pel1 runtime modul)
+    | PEX (str, pfml1, pel1) -> EX (str, pfmll_to_fml pfml1 runtime modul, pstate_to_state pel1 runtime modul)
+    | PAF (str, pfml1, pel1) -> AF (str, pfmll_to_fml pfml1 runtime modul, pstate_to_state pel1 runtime modul)
+    | PEG (str, pfml1, pel1) -> EG (str, pfmll_to_fml pfml1 runtime modul, pstate_to_state pel1 runtime modul)
+    | PAR (str1, str2, pfml1, pfml2, pel1) -> AR (str1, str2, pfmll_to_fml pfml1 runtime modul, pfmll_to_fml pfml2 runtime modul, pstate_to_state pel1 runtime modul)
+    | PEU (str1, str2, pfml1, pfml2, pel1) -> EU (str1, str2, pfmll_to_fml pfml1 runtime modul, pfmll_to_fml pfml2 runtime modul, pstate_to_state pel1 runtime modul)
+    
+	  
+let rec preprocess_fml fml runtime modul =
+    match fml with
+    | Atomic (str, ss) -> Atomic(str, List.map (fun s ->
+            match s with
+            | SVar sv -> State (evaluate (Symbol [sv]) [] runtime modul)
+            | _ -> s
+        ) ss)
+    | Neg fml1 -> Neg (preprocess_fml fml1 runtime modul)
+    | And (fml1, fml2) -> And (preprocess_fml fml1 runtime modul, preprocess_fml fml2 runtime modul)
+    | Or (fml1, fml2) -> Or (preprocess_fml fml1 runtime modul, preprocess_fml fml2 runtime modul)
+    | AX (str, fml1, SVar sv) -> AX (str, fml1, State (evaluate (Symbol [sv]) [] runtime modul))
+    | EX (str, fml1, SVar sv) -> EX (str, fml1, State (evaluate (Symbol [sv]) [] runtime modul))
+    | AF (str, fml1, SVar sv) -> AF (str, fml1, State (evaluate (Symbol [sv]) [] runtime modul))
+    | EG (str, fml1, SVar sv) -> EG (str, fml1, State (evaluate (Symbol [sv]) [] runtime modul))
+    | AR (str1, str2, fml1, fml2, SVar sv) -> AR (str1, str2, fml1, fml2, State (evaluate (Symbol [sv]) [] runtime modul))
+    | EU (str1, str2, fml1, fml2, SVar sv) -> EU (str1, str2, fml1, fml2, State (evaluate (Symbol [sv]) [] runtime modul))
+    
 let pkripke_model_to_model (pkm:pkripke_model) runtime modul = 
     let trans = 
     match snd pkm.transition with
@@ -478,10 +500,17 @@ let pkripke_model_to_model (pkm:pkripke_model) runtime modul =
     | PNo_case no_case_nexts -> No_case (pexprl_to_expr no_case_nexts) in
     {
         transition = (ppatl_to_pattern (fst pkm.transition), trans);
+        atomic = (
+                let atomic_tbl = Hashtbl.create 1 in
+                Hashtbl.iter (fun str (args, pel) -> Hashtbl.add atomic_tbl str (args, pexprl_to_expr pel)) pkm.atomic;
+                print_endline ("added "^(string_of_int (Hashtbl.length atomic_tbl))^" atomic definitions.");
+                atomic_tbl
+            );
         fairness = List.map (fun pfl -> pfmll_to_fml pfl runtime modul) pkm.fairness;
         properties = List.map (fun (str, pfmll) -> 
-        let fml = pfmll_to_fml pfmll runtime modul in
-        match fml with
+        let fml = preprocess_fml (pfmll_to_fml pfmll runtime modul) runtime modul in
+        str, fml
+        (* match fml with
         | Atomic (pred, ss) -> 
             str, Atomic (pred, List.map ( fun s ->
                 match s with
@@ -492,14 +521,14 @@ let pkripke_model_to_model (pkm:pkripke_model) runtime modul =
                         with _ -> s
                     end
             ) ss)
-        | _ -> str, fml
-        (* str, pfmll_to_fml pfmll runtime modul *)
+        | _ -> str, fml *)
         ) pkm.properties;
     }
 
 let pmoduls_to_runtime pmoduls pkripke_model start_modul =
     let dummy_kripke_model = {
         transition = (Pat_Symbol "", Case []);
+        atomic = Hashtbl.create 0;
         fairness = [];
         properties = [];
     } in
