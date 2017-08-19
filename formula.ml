@@ -12,9 +12,12 @@ let str_state s =
 	| State value -> str_value value
 
 let str_state_list sl = 
-	let tmp_str = ref "" in
-	List.iter (fun s -> tmp_str := !tmp_str^(str_state s)^" ") sl;
-	!tmp_str
+	if List.length sl = 1 then
+		str_state (List.hd sl)
+	else 
+		let tmp_str = ref (str_state (List.hd sl)) in
+		List.iter (fun s -> tmp_str := !tmp_str^", "^(str_state s)) (List.tl sl);
+		!tmp_str
 
 type formula = 
 	  Top
@@ -85,7 +88,7 @@ let rec str_fml fml =
 	match fml with
 	| Top -> "TRUE"
 	| Bottom -> "FALSE"
-	| Atomic (e, sl) -> let str = (e) ^" "^ (str_state_list sl) in String.trim str
+	| Atomic (e, sl) -> let str = (e) ^" ("^ (str_state_list sl)^")" in String.trim str
 	| Neg fml1 -> "(not " ^ (str_fml fml1) ^ ")"
 	| And (fml1, fml2) -> (str_fml fml1) ^ "/\\" ^ (str_fml fml2)
 	| Or (fml1, fml2) -> (str_fml fml1) ^ "\\/" ^ (str_fml fml2)

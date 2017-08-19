@@ -1,17 +1,17 @@
 //import Dummy
 (*datatype t1 = int*)
+import Test_modul
 datatype t2 = int
 datatype t3 = {
         x : int;
         y : bool;
     }
-datatype day = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
-
 value x = 10
 value y = 20
 value z = 4
+value init = 1
 
-function day_of_z z : int -> day = 
+function day_of_z (z) : int -> day = 
     match z with
     | 1 -> Monday
     | 2 -> Tuesday
@@ -21,33 +21,35 @@ function day_of_z z : int -> day =
     | 6 -> Saturday
     | _ -> Sunday
 
-function is_sunday d : day -> bool= 
+function is_sunday (d) : day -> bool= 
     d = Sunday
 
-function is_int_sunday i : int -> bool = 
+function is_int_sunday (i) : int -> bool = 
     match i with
     | 1 -> 
         let a = i;
-        (is_sunday (day_of_z a)) || (is_sunday (day_of_z (a+1)))
+        (is_sunday (day_of_z (a))) || (is_sunday (day_of_z (a+1)))
     |_ -> 
         let (a,b) = (i,2);
-        is_sunday (day_of_z a)
+        is_sunday (day_of_z (a))
 
-function fair1 z : int -> bool = 
-    is_sunday (day_of_z z)
+function fair1 (z) : int -> bool = 
+    is_sunday (day_of_z (z))
 
-function test s = 
-    if s<7 then
-        s+1
-    else
-        1
 
-Model {
-    next s = 
-        s<7: s+1;
-        s>=7: 1;
-
+Model Test() {
+    Transition {
+        next s := 
+            s<7: s+1;
+            s>=7: 1;
+    }
 //    fairness (fair1 s); AX(x, fair1 x, s)
-    property dummy = is_int_sunday 1
-    property reach_sunday = AF (x, is_int_sunday x, 1)
+    Atomic {
+        atom_dummy (s) := is_int_sunday (s);
+        atom_is_int_sunday (s) := is_int_sunday (s);
+    }
+    Spec { 
+        dummy := atom_dummy (init);
+        reach_sunday := AF (x, atom_is_int_sunday(x), init);
+    }
 }

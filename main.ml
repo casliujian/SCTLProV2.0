@@ -54,14 +54,18 @@ open Lexing
 let parse_and_prove fnames = 
     let get_mname fname = 
         (* List.iter (fun str -> print_endline (":"^str^" ")) (String.split_on_char '.' (String.trim fname)); *)
-        let mname = List.hd (String.split_on_char '.' (String.trim fname)) in
+        (
+            let lfname = List.hd (List.rev (String.split_on_char '/' (String.trim fname))) in
+            let mname = List.hd (String.split_on_char '.' lfname
+        ) in
         (* print_endline ("mname: "^(String.capitalize_ascii mname)); *)
-        String.capitalize_ascii mname in
+        String.capitalize_ascii mname) in
     let pmoduls = Hashtbl.create 1 in
     let opkripke = ref None in
     let start_pmodul = ref "" in
     List.iter (fun fname -> 
         let mname = get_mname fname in
+        (* print_endline ("proving modul "^mname^" in "^fname); *)
         let cha = open_in fname in
         let lbuf = Lexing.from_channel (cha) in
         try
