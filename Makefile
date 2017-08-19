@@ -30,7 +30,7 @@ opt:
 	ocamlopt -c formula.ml
 	ocamlopt -c dep.ml
 	ocamlopt -I utils -c utils.cmxa interp.ml
-	ocamlopt -c prove.ml
+	ocamlopt -I utils -c utils.cmxa prove.ml
 	ocamlopt -c main.ml
 	ocamlopt -I utils -o sctlprov2 utils.cmxa ast.cmx print.cmx parser.cmx lexer.cmx typechecker.cmx expr.cmx formula.cmx dep.cmx interp.cmx prove.cmx main.cmx
 

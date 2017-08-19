@@ -367,8 +367,12 @@ expr_single: expr_path {mk_pexpr_loc (PSymbol $1) (PTVar (new_type_var ())) $sta
     | uid = UIden e = expr_single {
             mk_pexpr_loc (PConstr ((PConstr_compound (uid, e)))) (PTVar (new_type_var ())) $startpos(uid) $endpos(e)
         }
-    | id = Iden el = nonempty_list(expr_single) %prec FUN {
-            mk_pexpr_loc (POp (id, el)) (PTVar (new_type_var ())) $startpos(id) $endpos(el)
+    | id = Iden LB1 el = separated_nonempty_list(Comma, expr_single) RB1 %prec FUN {
+            if List.length el = 1 then
+                let eh:pexpr_loc = List.hd el in
+                mk_pexpr_loc (POp (id, [eh])) (PTVar (new_type_var ())) $startpos(id) $endpos(el)
+            else 
+                mk_pexpr_loc (POp (id, [(mk_pexpr_loc (PTuple el) (PTTuple (List.map (fun (e:pexpr_loc)->e.ptyp) el)) $startpos(el) $endpos(el) )])) (PTVar (new_type_var ())) $startpos(id) $endpos(el)
         }
     | Let p = pattern Equal e = expr_single {mk_pexpr_loc (PLet (p, e)) PTUnt $startpos($1) $endpos(e)}
     | e1 = expr_single ColonColon e2 = expr_single %prec COLONCOLON{

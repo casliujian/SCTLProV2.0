@@ -375,7 +375,7 @@ and prove_fairs cont runtime modul =
 						prove_fairs (generate_EU_cont gamma fairs levl x y fml1 fml2 s next contl contr) runtime modul
 				) 
             | AR (x, y, fml1, fml2, State s) ->
-				print_endline ("number of states in merge: "^(string_of_int (State_set.cardinal (Hashtbl.find merges levl))));
+				(* print_endline ("number of states in merge: "^(string_of_int (State_set.cardinal (Hashtbl.find merges levl)))); *)
             	(*(
             		if State_set.is_empty gamma
 					then clear_global_merge levl

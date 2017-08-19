@@ -503,7 +503,7 @@ let pkripke_model_to_model (pkm:pkripke_model) runtime modul =
         atomic = (
                 let atomic_tbl = Hashtbl.create 1 in
                 Hashtbl.iter (fun str (args, pel) -> Hashtbl.add atomic_tbl str (args, pexprl_to_expr pel)) pkm.atomic;
-                print_endline ("added "^(string_of_int (Hashtbl.length atomic_tbl))^" atomic definitions.");
+                (* print_endline ("added "^(string_of_int (Hashtbl.length atomic_tbl))^" atomic definitions."); *)
                 atomic_tbl
             );
         fairness = List.map (fun pfl -> pfmll_to_fml pfl runtime modul) pkm.fairness;
