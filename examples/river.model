@@ -23,10 +23,10 @@ Model River_Crossing()
 	Transition
 	{
 		next s :=
-		(s.farmer = s.wolf) : s with {farmer = !s.farmer; wolf = !s.wolf;};
-		(s.farmer = s.goat) : s with {farmer = !s.farmer; goat = !s.goat;};
-		(s.farmer = s.cabbage) : s with {farmer = !s.farmer; cabbage = !s.cabbage;};
-		true : s with {farmer = !s.farmer;};
+			(s.farmer = s.wolf) : s with {farmer = !s.farmer; wolf = !s.wolf;};
+			(s.farmer = s.goat) : s with {farmer = !s.farmer; goat = !s.goat;};
+			(s.farmer = s.cabbage) : s with {farmer = !s.farmer; cabbage = !s.cabbage;};
+			true : s with {farmer = !s.farmer;};
 	}
 	
 	Atomic

@@ -9,3 +9,4 @@ lexer.ml
 *.a
 *.cmxa
 sctlprov2
+*.sql
