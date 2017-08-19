@@ -10,3 +10,4 @@ lexer.ml
 *.cmxa
 sctlprov2
 *.sql
+./.vscode/*
