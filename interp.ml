@@ -492,6 +492,7 @@ let rec preprocess_fml fml runtime modul =
     | EG (str, fml1, SVar sv) -> EG (str, fml1, State (evaluate (Symbol [sv]) [] runtime modul))
     | AR (str1, str2, fml1, fml2, SVar sv) -> AR (str1, str2, fml1, fml2, State (evaluate (Symbol [sv]) [] runtime modul))
     | EU (str1, str2, fml1, fml2, SVar sv) -> EU (str1, str2, fml1, fml2, State (evaluate (Symbol [sv]) [] runtime modul))
+    | _ -> fml
     
 let pkripke_model_to_model (pkm:pkripke_model) runtime modul = 
     let trans = 
