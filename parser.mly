@@ -133,7 +133,7 @@ kripke: Model UIden LB1 RB1 LB3 ovd = option(var_decl) oinit = option(init_decl)
             begin
                 match oinit with
                 | None -> ()
-                | Some e -> Hashtbl.add symbol_tbl "Init" (Val, PExpr_loc (PTVar (new_type_var ()), e))
+                | Some e -> Hashtbl.add symbol_tbl "init" (Val, PExpr_loc (PTVar (new_type_var ()), e))
             end;
 
             kripke_model := Some {
