@@ -69,3 +69,8 @@ clean:
 	rm -f sctlprov2
 	rm -f ./examples/*.typed
 	rm -f ./examples/*.origin
+	rm -f .origin
+	rm -f .typed
+	rm -f *.origin
+	rm -f *.typed
+	rm -f *.conflicts

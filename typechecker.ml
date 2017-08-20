@@ -7,15 +7,6 @@ exception Invalid_pexpr_loc of pexpr_loc * string
 exception Undefined_modul of string
 exception Undefined_idenfier of string 
 
-(*type dep = string * ((dep list) option)
-
-  let rec dep_of_pmodul pmname pmoduls = 
-    try
-        let pm = Hashtbl.find pmname in
-        match pm.imported with
-        | [] -> pmname, None
-        | impts -> pmname, Some (List.map (fun a -> dep_of_pmodul a pmoduls) impts)
-    with Not_found -> eprintf "Error: module %s is not defined.\n" pmname; exit 1*)
 
 type env = (ptyp * ptyp) list
 
@@ -36,23 +27,6 @@ let rec merge_env env1 env2 =
         (PTVar i, pt1)::((!tmp_pt_list) @ (re_range_env (Pairs.remove_all env' (PTVar i))))
       | pt_pair ::env' -> pt_pair::(re_range_env env') in
     re_range_env (env1@env2)
-        
-
-  (* match env1 with
-  | [] -> env2
-  | (pt1, pt2) :: env1' -> 
-    let pts = Pairs.find_all env2 pt1 in 
-    let rec find_ptyp pts pt = 
-      match pts with
-      | [] -> pt 
-      | pt3::pts' -> begin
-          match pt,pt3 with
-          | PTVar i, PTVar j -> find_ptyp pts' (PTVar (min i j))
-          | _, PTVar j -> find_ptyp pts' pt
-          | PTVar i, _ -> find_ptyp pts' pt3
-          | _ ->  find_ptyp pts' pt
-        end in
-    (pt1, find_ptyp pts pt2)::(merge_env env1' (Pairs.remove_all env2 pt1)) *)
 
 
 let rec expand_udt pt modul moduls =
@@ -783,36 +757,14 @@ let rec apply_env_to_ppatl env ppatl =
 let rec apply_env_to_pel env (pel:pexpr_loc) = 
   pel.ptyp <- apply_env_to_ptyp env pel.ptyp;
   match pel.pexpr with
-  (* | PLocal_Val (_, pel1) -> apply_env_to_pel env pel1
-  | PLocal_Var (_, pel1) -> apply_env_to_pel env pel1 *)
   | PLet (ppatl, pel1) ->
     apply_env_to_ppatl env ppatl;
     apply_env_to_pel env pel1
-  (* | PDot (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2 *)
   | PAray (pel_list) -> List.iter (fun pel->apply_env_to_pel env pel) pel_list
   | PLst (pel_list) -> List.iter (fun pel->apply_env_to_pel env pel) pel_list
   | POp (op, pel_list) -> List.iter (fun pel->apply_env_to_pel env pel) pel_list
-  (* | PAray_Field (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
-  | PLst_Cons (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2 *)
   | PTuple pel_list -> List.iter (fun pel->apply_env_to_pel env pel) pel_list
   | PRecord str_pel_list -> List.iter (fun (str,pel) -> apply_env_to_pel env pel) str_pel_list
-  (* | PNegb pel1 -> apply_env_to_pel env pel1
-  | PNegi pel1 -> apply_env_to_pel env pel1
-  | PNegf pel1 -> apply_env_to_pel env pel1
-  | PAndo (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
-  | POro (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
-  | PAdd (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
-  | PAddDot (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
-  | PMinus (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
-  | PMinusDot (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
-  | PMult (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
-  | PMultDot (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
-  | PEqual (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
-  | PNon_Equal (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
-  | PLT (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
-  | PGT (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
-  | PLE (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
-  | PGE (pel1, pel2) -> apply_env_to_pel env pel1; apply_env_to_pel env pel2 *)
   | PIF (pel1, pel2, opel3) -> begin
       match opel3 with
       | None -> apply_env_to_pel env pel1; apply_env_to_pel env pel2
@@ -829,7 +781,6 @@ let rec apply_env_to_pel env (pel:pexpr_loc) =
     apply_env_to_pel env pel1; 
     List.iter (fun (str, pel) -> apply_env_to_pel env pel) str_pel_list
   | PConstr (PConstr_compound (str, pel1)) -> apply_env_to_pel env pel1
-  (* | PApply (str, pel_list) -> List.iter (fun pel -> apply_env_to_pel env pel) pel_list *)
   | _ -> ()
 
 let rec apply_env_to_pformulal env pfml =
@@ -915,15 +866,6 @@ let check_modul modul moduls =
             apply_env_to_ppatl tmp_env (fst kripke.transition);
             apply_env_to_pel tmp_env no_case_nexts
         end;
-
-        (* Hashtbl.iter (fun str (args, pel) -> 
-          let tmp_env,_ = check_pel_type pel env tctx modul moduls in
-          apply_env_to_pel tmp_env pel
-        ) kripke.atomic; *)
-        (* let env2, _ = check_pel_type (snd kripke.transition) env1 tctx1 modul moduls in
-        apply_env_to_ppatl env2 (fst kripke.transition);
-        apply_env_to_pel env2 (snd kripke.transition); *)
-        (* print_endline ("type check transtion complete."); *)
         List.iter (fun (str, pfml) -> 
           let env = check_pformulal_type pfml [] modul moduls in
           apply_env_to_pformulal env pfml

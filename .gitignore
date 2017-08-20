@@ -3,7 +3,9 @@ parser.mli
 parser.ml
 lexer.ml
 *.origin
+.origin
 *.typed
+.typed
 *.conflicts
 *.o
 *.a

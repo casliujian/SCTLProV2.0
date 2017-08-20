@@ -2,8 +2,6 @@ open Ast
 
 type expr = 
       Symbol of string list
-    (* | Val_binding of string * expr
-    | Var_binding of string * expr  *)
     | Let of pattern * expr
     | Int of int
     | Float of float
@@ -11,28 +9,9 @@ type expr =
     | Aray of (expr list)
     | Lst of (expr list)
     | Op of string * (expr list)
-    (* | Aray_field of expr * expr
-    | Lst_cons of expr * expr *)
     | Bool of bool
     | Tuple of (expr list)
     | Record of ((string * expr) list)
-    (* | Negb of expr
-    | Ando of expr * expr
-    | Oro of expr * expr
-    | Negi of expr
-    | Negf of expr
-    | Add of expr * expr
-    | AddDot of expr * expr
-    | Minus of expr * expr
-    | MinusDot of expr * expr
-    | Mult of expr * expr
-    | MultDot of expr * expr
-    | Equal of expr * expr
-    | Non_Equal of expr * expr
-    | LT of expr * expr
-    | GT of expr * expr
-    | LE of expr * expr
-    | GE of expr * expr *)
     | IF of expr * expr * (expr option)
     | While of expr * expr
     | For of string * expr * expr * expr
@@ -41,7 +20,6 @@ type expr =
     | Match of expr * ((pattern * expr) list)
     | With of expr * ((string * expr) list)
     | Constr of string * (expr option)
-    (* | Apply of string * (expr list) *)
 and pattern =
       Pat_Symbol of string
     | Pat_Int of int
@@ -64,18 +42,6 @@ and value =
   | VTuple of (value list)
   | VRecord of (string * value) list
   | VConstr of string * (value option)
-(* and formula = 
-  | Top | Bottom
-  | Atomic of string * (expr list)
-  | Neg of formula
-  | And of formula * formula
-  | Or of formula * formula
-  | AX of string * formula * expr
-  | EX of string * formula * expr
-  | AF of string * formula * expr
-  | EG of string * formula * expr
-  | AR of string * string * formula * formula * expr
-  | EU of string * string * formula * formula * expr *)
 
 let rec str_expr e = 
   match e with
@@ -86,10 +52,7 @@ let rec str_expr e =
           | [str] -> str
           | str::strs' -> str^"."^(str_strs strs') in
       str_strs str_list
-  (* | Val_binding (str, pel1) -> "val "^str^"="^(str_expr pel1)
-  | Var_binding (str, pel1) -> "var "^str^"="^(str_expr pel1) *)
   | Let (p, e1) -> "let "^(str_pat p)^" = "^(str_expr e1) 
-  (* | PDot (pel1, pel2) -> (str_expr pel1)^"."^(str_expr pel2) *)
   | Int i -> (string_of_int i)
   | Float f -> (string_of_float f)
   | Unt -> "()"
@@ -209,8 +172,6 @@ let rec str_expr_list el =
 let rec pexprl_to_expr pel = 
   match pel.pexpr with
   | PSymbol strs -> Symbol strs
-  (* | PLocal_Val (str, pel1) -> Val_binding (str, pexprl_to_expr pel1)
-  | PLocal_Var (str, pel1) -> Var_binding (str, pexprl_to_expr pel1) *)
   | PLet (ppatl, pel1) -> Let (ppatl_to_pattern ppatl, pexprl_to_expr pel1)
   | PInt i -> Int i
   | PFloat f -> Float f
@@ -218,28 +179,9 @@ let rec pexprl_to_expr pel =
   | PAray pel -> Aray (List.map (fun pe -> pexprl_to_expr pe) pel)
   | PLst pel -> Lst (List.map (fun pe -> pexprl_to_expr pe) pel)
   | POp (op, pel_list) -> Op (op, List.map (fun pel->pexprl_to_expr pel) pel_list)
-  (* | PAray_Field (pel1, pel2) -> Aray_field (pexprl_to_expr pel1, pexprl_to_expr pel2)
-  | PLst_Cons (pel1, pel2) -> Lst_cons (pexprl_to_expr pel1, pexprl_to_expr pel2) *)
   | PBool b -> Bool b
   | PTuple pels -> Tuple (List.map (fun pel->pexprl_to_expr pel) pels)
   | PRecord str_pel_list -> Record (List.map (fun (str, pel) -> str, pexprl_to_expr pel) str_pel_list)
-  (* | PNegb pel1 -> Negb (pexprl_to_expr pel1)
-  | PAndo (pel1, pel2) -> Ando (pexprl_to_expr pel1, pexprl_to_expr pel2)
-  | POro (pel1, pel2) -> Oro (pexprl_to_expr pel1, pexprl_to_expr pel2)
-  | PNegi pel1 -> pexprl_to_expr pel1
-  | PNegf pel1 -> pexprl_to_expr pel1
-  | PAdd (pel1, pel2) -> Add (pexprl_to_expr pel1, pexprl_to_expr pel2)
-  | PAddDot (pel1, pel2) -> AddDot (pexprl_to_expr pel1, pexprl_to_expr pel2)
-  | PMinus (pel1, pel2) -> Minus (pexprl_to_expr pel1, pexprl_to_expr pel2)
-  | PMinusDot (pel1, pel2) -> MinusDot (pexprl_to_expr pel1, pexprl_to_expr pel2)
-  | PMult (pel1, pel2) -> Mult (pexprl_to_expr pel1, pexprl_to_expr pel2)
-  | PMultDot (pel1, pel2) -> MultDot (pexprl_to_expr pel1, pexprl_to_expr pel2)
-  | PEqual (pel1, pel2) -> Equal (pexprl_to_expr pel1, pexprl_to_expr pel2)
-  | PNon_Equal (pel1, pel2) -> Non_Equal (pexprl_to_expr pel1, pexprl_to_expr pel2)
-  | PLT (pel1, pel2) -> LT (pexprl_to_expr pel1, pexprl_to_expr pel2)
-  | PLE (pel1, pel2) -> LE (pexprl_to_expr pel1, pexprl_to_expr pel2)
-  | PGT (pel1, pel2) -> GT (pexprl_to_expr pel1, pexprl_to_expr pel2)
-  | PGE (pel1, pel2) -> GE (pexprl_to_expr pel1, pexprl_to_expr pel2) *)
   | PIF (pel1, pel2, opel3) -> IF (pexprl_to_expr pel1, pexprl_to_expr pel2, Options.bind pexprl_to_expr opel3)
   | PWhile (pel1, pel2) -> While (pexprl_to_expr pel1, pexprl_to_expr pel2)
   | PFor (str, pel1, pel2, pel3) -> For (str, pexprl_to_expr pel1, pexprl_to_expr pel2, pexprl_to_expr pel3)
@@ -249,7 +191,6 @@ let rec pexprl_to_expr pel =
   | PWith (pel1, str_pel_list) -> With (pexprl_to_expr pel1, List.map (fun (str, pel) -> str, pexprl_to_expr pel) str_pel_list)
   | PConstr (PConstr_basic str) -> Constr (str, None)
   | PConstr (PConstr_compound (str, pel1)) -> Constr (str, Some (pexprl_to_expr pel1))
-  (* | PApply (str, pels) -> Apply (str, List.map (fun pel -> pexprl_to_expr pel) pels) *)
 and ppatl_to_pattern ppatl = 
   match ppatl.ppat with
   | PPat_Symbol str -> Pat_Symbol str

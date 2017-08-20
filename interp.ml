@@ -173,8 +173,6 @@ let rec evaluate_seq exprs ctx runtime modul =
   | [e] -> evaluate e ctx runtime modul 
   | e :: es -> begin
       match e with
-      (* | Val_binding (str, e1) -> evaluate_seq es (Refpairs.add_to_first ctx str (evaluate e1 ctx runtime modul)) runtime modul
-      | Var_binding (str, e1) -> evaluate_seq es (Refpairs.add_to_first ctx str (evaluate e1 ctx runtime modul)) runtime modul *)
       | Let (p, e1) -> 
         let v = evaluate e1 ctx runtime modul in
         let ctx1,_ = get_matched_pattern v [(p, e1)] in
