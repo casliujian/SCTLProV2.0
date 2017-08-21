@@ -251,34 +251,10 @@ let prove_atomic s sl runtime modul =
 		| VBool b -> b
 		| _ -> raise (Error_proving_atomic)
 	with Not_found -> print_endline ("definition of atomic function "^s^" is missing."); exit 1
-(* 
-	let pats, e1 = find_function s runtime modul in
-    if List.length args <> List.length pats then 
-        raise (Evaluation_error ("function "^s^" has "^(string_of_int (List.length pats))^" parameters, but is applied to "^(string_of_int (List.length args))^" arguments."))
-    else begin
-        let ctx0 = ref [] in
-        for i = 0 to List.length args - 1 do
-            let v1 = List.nth args i in
-            let ctx1, _ = get_matched_pattern v1 [(List.nth pats i, e1)] in
-            ctx0 := ctx1 @ !ctx0
-        done;
-        let result = evaluate e1 (!ctx0) runtime modul in
-        match result with
-        | VBool b -> b
-        | _ -> raise (Error_proving_atomic) 
-    end*)
 
 let rec satisfy_fair fml s runtime modul =
 	prove_fairs (Cont(State_set.empty, [], "0", subst_s fml ("s") (State s), Basic true, Basic false, [], [])) runtime modul
 
-(* and prove_atomic s sl modl = 
-	match s with
-	(* | "has_next" -> State_set.is_empty (next (get_array_from_state (List.hd sl)) modl.transitions modl.var_index_tbl) *)
-	| _ -> (try (match apply_atomic (Hashtbl.find modl.atomic_tbl s) sl modl.var_index_tbl with
-			| Top -> true
-			| Bottom -> false
-			| _ -> raise Error_proving_atomic) with Not_found -> print_endline ("Did not find atomic formula: "^s); exit 1) 
- *)
 and prove_fairs cont runtime modul = 
     match cont with 
     | Basic b -> b

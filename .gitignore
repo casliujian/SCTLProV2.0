@@ -13,3 +13,4 @@ lexer.ml
 sctlprov2
 *.sql
 ./.vscode/*
+log

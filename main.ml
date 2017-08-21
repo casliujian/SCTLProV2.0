@@ -2,7 +2,6 @@ open Ast
 open Typechecker
 open Dep
 open Interp
-open Prove
 open Printf
 open Lexing
 
@@ -51,7 +50,7 @@ open Lexing
         printf "syntax error at line %d, column %d\n" ep.pos_lnum (ep.pos_cnum - ep.pos_bol) *)
 
 
-let parse_and_prove fnames = 
+let parse_and_prove fnames ip = 
     let get_mname fname = 
         (* List.iter (fun str -> print_endline (":"^str^" ")) (String.split_on_char '.' (String.trim fname)); *)
         (
@@ -119,7 +118,9 @@ let parse_and_prove fnames =
                     exit 1) in
         typecheck dg pmoduls;
         let runtime = pmoduls_to_runtime pmoduls pkripke !start_pmodul in
-        prove_model runtime !start_pmodul
+        match ip with
+        | "" -> Prover.prove_model runtime !start_pmodul
+        | str -> Prover_visualization.prove_model runtime !start_pmodul str
 
 
 
@@ -127,6 +128,7 @@ let parse_and_prove fnames =
 let _ = 
     let flag = ref 2 in
     let files = ref [] in
+    let vis_addr = ref "" in
     Arg.parse [
         (* "-test", Arg.Unit (fun () -> flag := 0), "\tparse test.model";
         "-debug", Arg.Unit (fun () -> flag := 1), "\tdebug the parser interactively"; *)
@@ -136,11 +138,12 @@ let _ =
             files := !files @ [str];
             flag := 2
         ), "\tinput files";
+        "-visualize_addr", Arg.String (fun s -> vis_addr := s), "\tIP address of the vmdv server";
     ] (fun s -> files := !files @ [s]) "";
     match !flag with
     (* | 0 -> test ()
     | 1 -> debug () *)
-    | 2 -> parse_and_prove !files
+    | 2 -> parse_and_prove !files !vis_addr
     | _ -> print_endline "don't know what to do."
 
     
