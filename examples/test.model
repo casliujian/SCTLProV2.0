@@ -29,7 +29,7 @@ function is_int_sunday (i) : int -> bool =
     | 1 -> 
         let a = i;
         (is_sunday (day_of_z (a))) || (is_sunday (day_of_z (a+1)))
-    |_ -> 
+    | _ -> 
         let (a,b) = (i,2);
         is_sunday (day_of_z (a))
 
