@@ -63,7 +63,7 @@ let output_result b s seqts prof out vt =
 		| i :: il' -> (string_of_int i)^", "^(str_int_list il')) in
 	let rec str_sequent seqt = 
 		(let gamma = fst seqt and fml = snd seqt in
-			let str_gamma = (State_set.fold (fun a b -> (str_state (State a))^"\r\n"^b) gamma "") in
+			let str_gamma = (State_set.fold (fun a b -> (str_state (State a))^" "^b) gamma "") in
 			(if str_gamma = "" then "" else str_gamma^"") ^"|- "^(str_fml fml)) in
 	let rec output_tmp_queue () = 
 		if (List.length !tmp_queue > 0) then 
@@ -260,7 +260,7 @@ let send_proof_tree id =
 	Hashtbl.iter (fun a b -> add_node id (string_of_int a) (str_sequent b) "Proved") sequents;*)
 	let rec str_sequent seqt = 
 		(let gamma = fst seqt and fml = snd seqt in
-			let str_gamma = (State_set.fold (fun a b -> (str_state (State a))^"\r\n"^b) gamma "") in
+			let str_gamma = (State_set.fold (fun a b -> (str_state (State a))^" "^b) gamma "") in
 			(if str_gamma = "" then "" else str_gamma^"") ^"|- "^(str_fml fml)) in
 	let tmp_fmls = ref [0] in
 	while !tmp_fmls <> [] do
