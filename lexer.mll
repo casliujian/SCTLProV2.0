@@ -100,12 +100,15 @@ rule token = parse
   | _ as s      {print_endline ("unknown charcter: "^(String.make 1 s)); token lexbuf}
 and comment_oneline_c = parse
   | nl    {Lexing.new_line lexbuf; token lexbuf}
+  | eof   {EOF}
   | _       {comment_oneline_c lexbuf}
 and comment_multiline_c = parse
   | "*/"    {token lexbuf}
   | nl      {Lexing.new_line lexbuf; comment_multiline_c lexbuf}
+  | eof     {EOF}
   | _       {comment_multiline_c lexbuf}
 and comment_ocaml = parse
   | "*)"    {token lexbuf}
   | nl      {Lexing.new_line lexbuf; comment_ocaml lexbuf}
+  | eof     {EOF}
   | _       {comment_ocaml lexbuf}

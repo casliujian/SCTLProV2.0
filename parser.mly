@@ -110,16 +110,7 @@ type_of_expr: Colon typ {$2}
 
 args: pattern {[$1]}
     | pattern args  {$1 :: $2}
-;    
-
-/* kripke: Model LB3 states Next p = pattern Equal nexts = transition_def fair = separated_list(Semicolon, formula) pl = list(property) RB3    {
-            kripke_model := Some {
-                transition = (p, nexts);
-                fairness = fair;
-                properties = pl;
-            }
-        } 
-; */
+;
 
 kripke: Model UIden LB1 RB1 LB3 ovd = option(var_decl) oinit = option(init_decl) trans = trans_decl atomics = atomic_decl ofairs = option(fair_decl) spec = spec_decl RB3    {
             (*choose_action ovd (fun ()->()) (fun t->Hashtbl.add symbol_tbl ($2^"_State") (UDT, PTyp t));

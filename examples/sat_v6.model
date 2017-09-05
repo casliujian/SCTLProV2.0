@@ -1,7 +1,6 @@
 datatype side = Right | Left
 
 datatype aircraft = {
-//	id: int;
 	seq: int;
 	mahf: side;
 }
@@ -28,10 +27,6 @@ datatype sca = {
 	intermediate:	list aircraft;
 	final:			list aircraft;
 	runway:			list aircraft;
-//	nextmahf:		side;
-//	nextseq:		int;
-//	nextid:			int;
-//	rule:			int;
 }
 
 
@@ -182,14 +177,6 @@ function find_aircraft_by_seq (ta, x) : (list aircraft, int) -> aircraft =
 
 
 // New aircraft
-/*
-function new_aircraft (s, si) : (sca, side) -> aircraft = {
-//	id = s.nextid;
-	seq = s.nextseq;
-	mahf = (if s.nextseq = first then si else s.nextmahf);
-}
-*/
-
 function new_aircraft (s, si) : (sca, side) -> aircraft = 
 	let ta = all_in_sca (s);
 	if length (ta) = 0 then
@@ -206,19 +193,11 @@ function new_aircraft (s, si) : (sca, side) -> aircraft =
 
 // New aircraft for departure
 function departure (s, si) : (sca, side) -> aircraft = {
-//	id = s.nextid;
 	mahf = si;
 	seq = 0;
 }
 
 // Reassign aircraft
-/*
-function reassign (s, a) : (sca, aircraft) -> aircraft = 
-	a with {
-		seq = s.nextseq;
-		mahf = (if s.nextseq - 1 = first then a.mahf else s.nextmahf);
-	}
-*/
 function reassign (s, a) : (sca, aircraft) -> aircraft = 
 	let all = all_in_sca (s);
 	let tn = length (all);
@@ -246,18 +225,10 @@ function vertical_entry (si, s) : (side, sca) -> (list sca) =
 	   | Left -> 
 		    [s with {
 		    	holding3_left = add_to_last (s.holding3_left, a);
-//		    	nextseq = next_landing (a);
-//		    	nextmahf = opposite (a.mahf);
-//		    	nextid = s.nextid + 1;
-//		    	rule = 1 * sign (si);
 		    }]
 	   | Right -> 
 		   [s with {
 		    	holding3_right = add_to_last (s.holding3_right, a);
-//		    	nextseq = next_landing (a);
-//		    	nextmahf = opposite (a.mahf);
-//		    	nextid = s.nextid + 1;
-//		    	rule = 1 * sign (si);
 		    }]
 	else
 		[]
@@ -269,18 +240,10 @@ function lateral_entry (si, this) : (side, sca) -> (list sca) =
 		| Left -> 
 			[this with{
 				lez_left = add_to_last (this.lez_left, a);
-//				nextseq = next_landing (a);
-//				nextmahf = opposite (a.mahf);
-//				nextid = this.nextid + 1;
-//				rule = 2*sign (Left);
 			}]
 		| Right -> 
 			[this with{
 				lez_right = add_to_last (this.lez_right, a);
-//				nextseq = next_landing (a);
-//				nextmahf = opposite (a.mahf);
-//				nextid = this.nextid + 1;
-//				rule = 2*sign (Right);
 			}]
 	else
 		[]
@@ -293,7 +256,6 @@ function holding_pattern_descend (si, this) : (side, sca) -> (list sca) =
 			[this with {
 				holding3_left = remove_first (this.holding3_left);
 				holding2_left = add_to_last (this.holding2_left, a);
-//				rule = 3*sign (Left);
 			}])
 		else
 			[]
@@ -303,7 +265,6 @@ function holding_pattern_descend (si, this) : (side, sca) -> (list sca) =
 			[this with {
 				holding3_right = remove_first (this.holding3_right);
 				holding2_right = add_to_last (this.holding2_right, a);
-//				rule = 3*sign (Right);
 			}])
 		else
 			[]
@@ -317,7 +278,6 @@ function vertical_approach_initiation (si, this) : (side, sca) -> (list sca) =
 				[this with {
 					holding2_left = remove_first (this.holding2_left);
 					base_left = add_to_last (this.base_left, a);
-//					rule = 4*sign (Left);
 				}]
 			else
 				[])
@@ -330,7 +290,6 @@ function vertical_approach_initiation (si, this) : (side, sca) -> (list sca) =
 				[this with {
 					holding2_right = remove_first (this.holding2_right);
 					base_right = add_to_last (this.base_right, a);
-//					rule = 4*sign (Right);
 				}]
 			else
 				[])
@@ -346,13 +305,11 @@ function lateral_approach_initiation (si, this) : (side, sca) -> (list sca) =
 				[this with {
 					lez_left = remove_first (this.lez_left);
 					base_left = add_to_last (this.base_left, a);
-//					rule = 5*sign (Left);
 				}]
 			else
 				[this with {
 					lez_left = remove_first (this.lez_left);
 					holding2_left = add_to_last (this.holding2_left, a);
-//					rule = 5*sign (Left);
 				}])
 		else 
 			[]
@@ -363,13 +320,11 @@ function lateral_approach_initiation (si, this) : (side, sca) -> (list sca) =
 				[this with {
 					lez_right = remove_first (this.lez_right);
 					base_right = add_to_last (this.base_right, a);
-//					rule = 5*sign (Right);
 				}]
 			else
 				[this with {
 					lez_right = remove_first (this.lez_right);
 					holding2_right = add_to_last (this.holding2_right, a);
-//					rule = 5*sign (Right);
 				}])
 		else 
 			[]
@@ -383,7 +338,6 @@ function merging (si, this) : (side, sca) -> (list sca) =
 				[this with {
 					base_left = remove_first (this.base_left);
 					intermediate = add_to_last (this.intermediate, a);
-//					rule = 6*sign (Left);
 				}]
 			else
 				[]))
@@ -396,7 +350,6 @@ function merging (si, this) : (side, sca) -> (list sca) =
 				[this with {
 					base_right = remove_first (this.base_right);
 					intermediate = add_to_last (this.intermediate, a);
-//					rule = 6*sign (Right);
 				}]
 			else
 				[]))
@@ -418,36 +371,17 @@ function exit this : sca -> (list sca) =
 			base_right = decrease (this.base_right);
 			base_left = decrease (this.base_left);
 			intermediate = decrease (remove_first (this.intermediate));
-			final = decrease (this.final); //this is newly added
-//			nextseq = (if this.nextseq = first then first else this.nextseq - 1);
-//			rule = 7;
+			final = decrease (this.final);
 		}]
 	else
 		[]
 
-
-
-/*
-function exit this : sca -> (list sca) = 
-	if length (this.intermediate) != 0 && is_first (first_of_list (this.intermediate)) then //assume "first" is in PVS
-		[this with {
-			intermediate = (remove_first (this.intermediate));
-
-			//added the first of intermediate to the last of final
-			final = add_to_last (this.final, first_of_list (this.intermediate)); 
-//			nextseq = (if this.nextseq = first then first else this.nextseq - 1);
-//			rule = 7;
-		}]
-	else
-		[]
-*/
 function final_segment this : sca -> (list sca) = 
 	if length (this.intermediate) != 0 then
 		(let a = first_of_list (this.intermediate);
 		[this with {
 			intermediate = remove_first (this.intermediate);
 			final = add_to_last (this.final, a);
-//			rule = 8;
 		}])
 	else 
 		[]
@@ -468,8 +402,6 @@ function landing this : sca -> (list sca) =
 			intermediate = decrease (this.intermediate);
 			final = decrease (remove_first (this.final));
 			runway = add_to_last (this.runway, (first_of_list (this.final)));
-//			nextseq = (if this.nextseq = first then first else this.nextseq - 1);
-//			rule = 9;
 		}]
 	else
 		[]
@@ -478,14 +410,13 @@ function taxing this : sca -> (list sca) =
 	if length (this.runway) != 0 && is_first (first_of_list (this.runway)) then
 		[this with {
 			runway = remove_first (this.runway);
-//			rule = 10;
 		}]
 	else
 		[]
 
 function missed_approach this : sca -> (list sca) =
 	if (length (this.final) != 0) then
-		(let a = first_of_list (this.final); //assume a is the first one, add the function
+		(let a = first_of_list (this.final);
 		let ra = reassign (this, a);
 		match a.mahf with
 		| Left ->
@@ -502,8 +433,6 @@ function missed_approach this : sca -> (list sca) =
 				base_left = decrease (this.base_left);
 				intermediate = decrease (this.intermediate);
 				final = decrease (remove_first (this.final)); 
-//				nextmahf = opposite (ra.mahf); //modify this part and remove nextmahf in the definition of sca
-//				rule = 11;
 			}]
 		| Right ->
 			[this with {
@@ -519,8 +448,6 @@ function missed_approach this : sca -> (list sca) =
 				base_left = decrease (this.base_left);
 				intermediate = decrease (this.intermediate);
 				final = decrease (remove_first (this.final));
-//				nextmahf = opposite (ra.mahf);
-//				rule = 11;
 			}])
 	else 
 		[]
@@ -534,20 +461,17 @@ function lowest_avaliable_altitude (si, this) : (side, sca) -> (list sca) =
 				[this with {
 					holding2_left = add_to_last (this.holding2_left, a);
 					maz_left = remove_first (this.maz_left);
-//					rule = 12*sign (Left);
 				}]
 			else (if length (this.holding3_left) = 0 then
 				[this with {
 					holding3_left = add_to_last (this.holding3_left, a);
 					maz_left = remove_first (this.maz_left);
-//					rule = 12*sign (Left);
 				}]
 			else
 				[this with {
 					holding3_left = add_to_last ((remove_first (this.holding3_left)), a);
 					holding2_left = add_to_last (this.holding2_left, (first_of_list (this.holding3_left)));
 					maz_left = remove_first (this.maz_left);
-//					rule = 12*sign (Left);
 				}]))
 		else
 			[]
@@ -558,20 +482,17 @@ function lowest_avaliable_altitude (si, this) : (side, sca) -> (list sca) =
 				[this with {
 					holding2_right = add_to_last (this.holding2_right, a);
 					maz_right = remove_first (this.maz_right);
-//					rule = 12*sign (Right);
 				}]
 			else (if length (this.holding3_right) = 0 then
 				[this with {
 					holding3_right = add_to_last (this.holding3_right, a);
 					maz_right = remove_first (this.maz_right);
-//					rule = 12*sign (Right);
 				}]
 			else
 				[this with {
 					holding3_right = add_to_last ((remove_first (this.holding3_right)), a);
 					holding2_right = add_to_last (this.holding2_right, (first_of_list (this.holding3_right)));
 					maz_right = remove_first (this.maz_right);
-//					rule = 12*sign (Right);
 				}]))
 		else
 			[]
@@ -590,8 +511,6 @@ function departure_initiation (si, this) : (side, sca) -> (list sca) =
 		   ) then
 			[this with {
 				runway = add_to_last (this.runway, departure (this, Left));
-//				nextid = this.nextid + 1;
-//				rule = 13*sign (Left);
 			}]
 		else 
 			[]
@@ -604,8 +523,6 @@ function departure_initiation (si, this) : (side, sca) -> (list sca) =
 		   ) then
 			[this with {
 				runway = add_to_last (this.runway, departure (this, Right));
-//				nextid = this.nextid + 1;
-//				rule = 13*sign (Right);
 			}]
 		else 
 			[]
@@ -622,13 +539,11 @@ function takeoff (this) : sca -> (list sca) =
 				[this with {
 					runway = remove_first (this.runway);
 					departure_left = add_to_last (this.departure_left, a);
-//					rule = 14;
 				}]
 			| Right ->
 				[this with {
 					runway = remove_first (this.runway);
 					departure_right = add_to_last (this.departure_right, a);
-//					rule = 14;
 				}]
 		else 
 			[]
@@ -647,7 +562,6 @@ function departing (si, this) : (side, sca) -> (list sca) =
 					((move (a)) :: (remove_first (this.departure_left))));
 			[this with {
 				departure_left = new_dep_left;
-//				rule = 15*sign (Left);
 			}])
 		else 
 			[]
@@ -661,17 +575,12 @@ function departing (si, this) : (side, sca) -> (list sca) =
 					((move (a)) :: (remove_first (this.departure_right))));
 			[this with {
 				departure_right = new_dep_right;
-//				rule = 15*sign (Right);
 			}])
 		else 
 			[]
 
 // **********************Defining related properties**************************
 // No more than four simultaneous landing operations
-/*
-function four_landings (s) : sca -> bool = 
-	landing_op (s) <= 4 && ((s.nextseq - 1) <= landing_op (s))
-*/
 function four_landings (s) : sca -> bool = 
 	landing_op (s) <= 4 && ((length (all_in_sca (s))) <= landing_op (s))
 
@@ -799,13 +708,6 @@ value init : sca = {
 	lez_right = [];
 	holding2_right = [];
 	holding3_right = [];
-	
-
-
-//	nextmahf = Right;
-//	nextseq = 1;
-//	nextid = 0;
-//	rule = 0;
 }
 
 //all aircraft in the sca
@@ -815,7 +717,6 @@ function all_in_sca (s) : sca -> (list aircraft) =
 	@ s.lez_left @ s.lez_right
 	@ s.maz_left @ s.maz_right
 	@ s.base_left @ s.base_right
-//	@ s.departure_left @ s.departure_right
 	@ s.intermediate
 	@ s.final
 
@@ -857,11 +758,11 @@ Model SATS ()
 	}
 
 	Spec {
-	//	correctness := AR (x, y, FALSE, atom_correct (y), init);
-	correctness := AR (x, y, FALSE, TRUE, init);
+		correctness := AR (x, y, FALSE, atom_correct (y), init);
+//	correctness := AR (x, y, FALSE, TRUE, init);
 	//	emergency := AX (x, AF(y, atom_empty_again (y), x), init);
 	
 	}
 }
 
-//TODO: add the printing function for sctl in the model definition file.
+//todo: add the debuging option for the input language
