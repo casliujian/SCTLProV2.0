@@ -9,8 +9,10 @@ module State_key = struct
 end;;
 module State_set = Set.Make(State_key)
 
+let merge_local = ref (State_set.empty)
 
 let next s runtime modul = 
+	merge_local := State_set.add s !merge_local;
 	let model = runtime.model in 
 	let ctx, _ = get_matched_pattern s [(fst model.transition, Int 0)] in
 	let nexts = snd model.transition in
@@ -31,10 +33,11 @@ let next s runtime modul =
 	end;
 	(*if State_set.is_empty !next_states then
 		next_states := State_set.singleton s;*)
-	if State_set.is_empty !next_states then begin
+	(* if State_set.is_empty !next_states then begin
 		print_endline ("deadlock detected in state: "^(str_value s));
 		exit 1
-	end;
+	end; *)
+	merge_local := State_set.union !merge_local !next_states;
 	!next_states
 	(* let sl = evaluate (snd model.transition) ctx runtime modul in
 	match sl with
@@ -342,7 +345,11 @@ and prove_fairs cont runtime modul =
 				 (
 					if State_set.is_empty gamma 
 					then clear_global_merge levl 
-					else add_to_global_merge gamma levl;
+					else 
+						(
+							add_to_global_merge gamma levl;
+							
+						);
 					if in_global_merge s levl
 					then
 						prove_fairs contr runtime modul
@@ -367,18 +374,23 @@ and prove_fairs cont runtime modul =
 					let fairs_new = List.map (fun (e, ss) -> if satisfy_fair e s modl then (e, State_set.add s gamma) else (e,ss)) fairs in
 					prove_fairs (generate_AR_cont gamma fairs_new levl x y fml1 fml2 s next contl contr) modl*)
 				 (
+					(* print_endline ("AR merge size: "^(string_of_int (State_set.cardinal (Hashtbl.find merges levl))));					 *)
 					(if State_set.is_empty gamma
 					then clear_global_merge levl
 					else 
-						add_to_global_merge gamma levl
-					(*print_endline ("AR merge size: "^(string_of_int (State_set.cardinal (Hashtbl.find merges levl))))*)
+						(
+							add_to_global_merge gamma levl
+						)
 					);		
 					if in_global_merge s levl
 					then 
 						prove_fairs contl runtime modul
-					else
+					else begin
 						let next = next s runtime modul in
+						(* State_set.iter (fun a -> 
+						if (not (in_global_merge a levl)) then print_endline ((str_value (a)))) next; *)
 						prove_fairs (generate_AR_cont gamma fairs levl x y fml1 fml2 s next contl contr) runtime modul
+					end
 				) 
 			| _ -> (print_endline ("Unable to prove: "^(str_fml fml)); raise Unable_to_prove)
         end
@@ -395,4 +407,6 @@ and prove_fairs cont runtime modul =
 			pre_process_merges (select_sub_fmls (sub_fmls nnf_fml "1"));
 			let b = (prove_fairs (Cont (State_set.empty, List.map (fun e -> (e, State_set.empty)) runtime.model.fairness, "1", (nnf_fml), Basic true, Basic false, [], [])) runtime modul) in
 			 print_endline (s ^ ": " ^ (string_of_bool b)));
+			 State_set.iter (fun s->print_endline (str_value s)) !merge_local;
+			 print_endline (string_of_int (State_set.cardinal !merge_local));
 			 prove_lst lst') in prove_lst spec_lst

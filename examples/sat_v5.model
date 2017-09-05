@@ -6,6 +6,11 @@ datatype aircraft = {
 	mahf: side;
 }
 
+value dummy_aircraft = {
+	mahf = Left;
+	seq = -1;
+}
+
 
 datatype sca = {
 	holding3_left: 	list aircraft;
@@ -23,8 +28,8 @@ datatype sca = {
 	intermediate:	list aircraft;
 	final:			list aircraft;
 	runway:			list aircraft;
-	nextmahf:		side;
-	nextseq:		int;
+//	nextmahf:		side;
+//	nextseq:		int;
 //	nextid:			int;
 //	rule:			int;
 }
@@ -164,38 +169,63 @@ function landing_op (s) : sca -> int =
 	length (s.base_left) + length (s.base_right) +
 	length (s.intermediate) + length (s.final)
 
+
+//find aircraft with seq number x
+function find_aircraft_by_seq (ta, x) : (list aircraft, int) -> aircraft = 
+	match ta with
+	| [] -> dummy_aircraft
+	| a :: ta' -> 
+		if a.seq = x then 
+			a
+		else
+			find_aircraft_by_seq (ta', x)
+
+
 // New aircraft
+/*
 function new_aircraft (s, si) : (sca, side) -> aircraft = {
 //	id = s.nextid;
 	seq = s.nextseq;
 	mahf = (if s.nextseq = first then si else s.nextmahf);
 }
-/*
+*/
+
 function new_aircraft (s, si) : (sca, side) -> aircraft = 
-	let ta = total_in_sca (s);
+	let ta = all_in_sca (s);
 	if length (ta) = 0 then
 		{
-			seq = 1;
 			mahf = si;
+			seq = 1;
 		}
 	else
+		let last = find_aircraft_by_seq (ta, length(ta));
 		{
+			mahf = (opposite(last.mahf));
 			seq = length (ta) + 1;
-			mahf = opposite(si);
 		}
-*/
+
 // New aircraft for departure
 function departure (s, si) : (sca, side) -> aircraft = {
 //	id = s.nextid;
-	seq = 0;
 	mahf = si;
+	seq = 0;
 }
 
 // Reassign aircraft
+/*
 function reassign (s, a) : (sca, aircraft) -> aircraft = 
 	a with {
 		seq = s.nextseq;
 		mahf = (if s.nextseq - 1 = first then a.mahf else s.nextmahf);
+	}
+*/
+function reassign (s, a) : (sca, aircraft) -> aircraft = 
+	let all = all_in_sca (s);
+	let tn = length (all);
+	let last = find_aircraft_by_seq(all, tn);
+	a with {
+		mahf = (if tn = first then a.mahf else opposite(last.mahf));
+		seq = tn + 1;
 	}
 
 // Move a departing aircraft
@@ -205,7 +235,7 @@ function move (a) : aircraft -> aircraft =
 	}
 
 // **************************Now define the helper functions for the transition rules***********************************
-function vertical_entry (si, s) : (sca, side) -> (list sca) = 
+function vertical_entry (si, s) : (side, sca) -> (list sca) = 
 	if virtual (s, si) < 2 && 
 		(!(is_on_approach_side (s, si))) && 
 		((length (if si = Left then s.maz_left else s.maz_right)) = 0) &&
@@ -216,16 +246,16 @@ function vertical_entry (si, s) : (sca, side) -> (list sca) =
 	   | Left -> 
 		    [s with {
 		    	holding3_left = add_to_last (s.holding3_left, a);
-		    	nextseq = next_landing (a);
-		    	nextmahf = opposite (a.mahf);
+//		    	nextseq = next_landing (a);
+//		    	nextmahf = opposite (a.mahf);
 //		    	nextid = s.nextid + 1;
 //		    	rule = 1 * sign (si);
 		    }]
 	   | Right -> 
 		   [s with {
 		    	holding3_right = add_to_last (s.holding3_right, a);
-		    	nextseq = next_landing (a);
-		    	nextmahf = opposite (a.mahf);
+//		    	nextseq = next_landing (a);
+//		    	nextmahf = opposite (a.mahf);
 //		    	nextid = s.nextid + 1;
 //		    	rule = 1 * sign (si);
 		    }]
@@ -239,16 +269,16 @@ function lateral_entry (si, this) : (side, sca) -> (list sca) =
 		| Left -> 
 			[this with{
 				lez_left = add_to_last (this.lez_left, a);
-				nextseq = next_landing (a);
-				nextmahf = opposite (a.mahf);
+//				nextseq = next_landing (a);
+//				nextmahf = opposite (a.mahf);
 //				nextid = this.nextid + 1;
 //				rule = 2*sign (Left);
 			}]
 		| Right -> 
 			[this with{
 				lez_right = add_to_last (this.lez_right, a);
-				nextseq = next_landing (a);
-				nextmahf = opposite (a.mahf);
+//				nextseq = next_landing (a);
+//				nextmahf = opposite (a.mahf);
 //				nextid = this.nextid + 1;
 //				rule = 2*sign (Right);
 			}]
@@ -389,7 +419,7 @@ function exit this : sca -> (list sca) =
 			base_left = decrease (this.base_left);
 			intermediate = decrease (remove_first (this.intermediate));
 			final = decrease (this.final); //this is newly added
-			nextseq = (if this.nextseq = first then first else this.nextseq - 1);
+//			nextseq = (if this.nextseq = first then first else this.nextseq - 1);
 //			rule = 7;
 		}]
 	else
@@ -405,7 +435,7 @@ function exit this : sca -> (list sca) =
 
 			//added the first of intermediate to the last of final
 			final = add_to_last (this.final, first_of_list (this.intermediate)); 
-			nextseq = (if this.nextseq = first then first else this.nextseq - 1);
+//			nextseq = (if this.nextseq = first then first else this.nextseq - 1);
 //			rule = 7;
 		}]
 	else
@@ -438,7 +468,7 @@ function landing this : sca -> (list sca) =
 			intermediate = decrease (this.intermediate);
 			final = decrease (remove_first (this.final));
 			runway = add_to_last (this.runway, (first_of_list (this.final)));
-			nextseq = (if this.nextseq = first then first else this.nextseq - 1);
+//			nextseq = (if this.nextseq = first then first else this.nextseq - 1);
 //			rule = 9;
 		}]
 	else
@@ -472,7 +502,7 @@ function missed_approach this : sca -> (list sca) =
 				base_left = decrease (this.base_left);
 				intermediate = decrease (this.intermediate);
 				final = decrease (remove_first (this.final)); 
-				nextmahf = opposite (ra.mahf); //modify this part and remove nextmahf in the definition of sca
+//				nextmahf = opposite (ra.mahf); //modify this part and remove nextmahf in the definition of sca
 //				rule = 11;
 			}]
 		| Right ->
@@ -489,7 +519,7 @@ function missed_approach this : sca -> (list sca) =
 				base_left = decrease (this.base_left);
 				intermediate = decrease (this.intermediate);
 				final = decrease (remove_first (this.final));
-				nextmahf = opposite (ra.mahf);
+//				nextmahf = opposite (ra.mahf);
 //				rule = 11;
 			}])
 	else 
@@ -638,8 +668,12 @@ function departing (si, this) : (side, sca) -> (list sca) =
 
 // **********************Defining related properties**************************
 // No more than four simultaneous landing operations
+/*
 function four_landings (s) : sca -> bool = 
 	landing_op (s) <= 4 && ((s.nextseq - 1) <= landing_op (s))
+*/
+function four_landings (s) : sca -> bool = 
+	landing_op (s) <= 4 && ((length (all_in_sca (s))) <= landing_op (s))
 
 // No more than 2 aircraft assigned to each missed approach fix. Moreover,
 // no more than 2 aircraft at each side of the sca (excluding the approach).
@@ -734,7 +768,7 @@ function invariant s : sca -> bool =
 
 // Initial state
 value init : sca = {
-	holding3_left = [];
+(*	holding3_left = [];
 	holding3_right = [];
 	holding2_left = [];
 	holding2_right = [];
@@ -748,9 +782,28 @@ value init : sca = {
 	departure_right = [];
 	intermediate = [];
 	final = [];
+	runway = [];*)
+
+	departure_left = [];
+	departure_right = [];
 	runway = [];
-	nextmahf = Right;
-	nextseq = 1;
+	final = [];
+	intermediate = [];
+	base_left = [];
+	base_right = [];
+	maz_left = [];
+	lez_left = [];
+	holding2_left = [];
+	holding3_left = [];
+	maz_right = [];
+	lez_right = [];
+	holding2_right = [];
+	holding3_right = [];
+	
+
+
+//	nextmahf = Right;
+//	nextseq = 1;
 //	nextid = 0;
 //	rule = 0;
 }
@@ -762,12 +815,10 @@ function all_in_sca (s) : sca -> (list aircraft) =
 	@ s.lez_left @ s.lez_right
 	@ s.maz_left @ s.maz_right
 	@ s.base_left @ s.base_right
-	@ s.departure_left @ s.departure_right
+//	@ s.departure_left @ s.departure_right
 	@ s.intermediate
 	@ s.final
 
-
-//TODO: change the model such that there is no seq and nextmahf in the definition of SCA
 
 // SCA will be empty again
 function empty_again this : sca -> bool = 
@@ -788,17 +839,16 @@ Model SATS ()
 			(holding_pattern_descend (Left, s)) @ (holding_pattern_descend (Right, s)) @
 			(vertical_approach_initiation (Left, s)) @ (vertical_approach_initiation (Right, s)) @
 			(lateral_approach_initiation (Left, s)) @ (lateral_approach_initiation (Right, s)) @
-			(merging (Left, s)) @ 
-			(merging (Right, s)) @
+			(merging (Left, s)) @ (merging (Right, s)) @
 			(exit (s)) @
 			(final_segment (s)) @
 			(landing (s)) @
 			(taxing (s)) @
 			(missed_approach (s)) @
-			(lowest_avaliable_altitude (Left, s)) @ (lowest_avaliable_altitude (Right, s)) 
-//			(departure_initiation (Left, s)) @ (departure_initiation (Right, s)) @
-//			(takeoff (s)) @
-//			(departing (Left, s)) @ (departing (Right, s))
+			(lowest_avaliable_altitude (Left, s)) @ (lowest_avaliable_altitude (Right, s)) @ 
+			(departure_initiation (Left, s)) @ (departure_initiation (Right, s)) @
+			(takeoff (s)) @
+			(departing (Left, s)) @ (departing (Right, s))
 	}
 
 	Atomic {
@@ -814,3 +864,4 @@ Model SATS ()
 	}
 }
 
+TODO: add the printing function for sctl in the model definition file.

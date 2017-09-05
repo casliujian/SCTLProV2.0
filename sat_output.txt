@@ -1,0 +1,6 @@
+{holding3_right=[];holding2_right=[];lez_right=[];maz_right=[];holding3_left=[];holding2_left=[];lez_left=[];maz_left=[];base_right=[];base_left=[];intermediate=[];final=[];runway=[];departure_right=[];departure_left=[];}
+{holding3_right=[];holding2_right=[];lez_right=[];maz_right=[];holding3_left=[];holding2_left=[];lez_left=[];maz_left=[];base_right=[];base_left=[];intermediate=[];final=[];runway=[];departure_right=[];departure_left=[{seq=0;mahf=Left;};];}
+{holding3_right=[];holding2_right=[];lez_right=[];maz_right=[];holding3_left=[];holding2_left=[];lez_left=[];maz_left=[];base_right=[];base_left=[];intermediate=[];final=[];runway=[];departure_right=[{seq=0;mahf=Right;};];departure_left=[];}
+{holding3_right=[];holding2_right=[];lez_right=[];maz_right=[];holding3_left=[];holding2_left=[];lez_left=[];maz_left=[];base_right=[];base_left=[];intermediate=[];final=[];runway=[{seq=0;mahf=Left;};];departure_right=[];departure_left=[];}
+{holding3_right=[];holding2_right=[];lez_right=[];maz_right=[];holding3_left=[];holding2_left=[];lez_left=[];maz_left=[];base_right=[];base_left=[];intermediate=[];final=[];runway=[{seq=0;mahf=Right;};];departure_right=[];departure_left=[];}
+5
