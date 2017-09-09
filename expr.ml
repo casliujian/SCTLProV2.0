@@ -217,7 +217,7 @@ let rec str_value v =
   | VRecord str_value_array -> "{"^ (List.fold_left (fun str (s1,v1) -> str^s1^"="^(str_value v1)^";") "" str_value_array) ^"}"
   | VConstr (str, None) -> str
   | VConstr (str, Some v1) -> str^" "^(str_value v1)
-
+(*
 let rec record_compare str_vl1 str_vl2 = 
     match str_vl1, str_vl2 with
     | [],[] -> 0
@@ -261,3 +261,5 @@ and value_compare v1 v2 =
         else
             value_compare v1 v2
     | _ -> (-1)
+
+*)

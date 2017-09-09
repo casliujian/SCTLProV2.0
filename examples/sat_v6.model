@@ -662,7 +662,7 @@ function safe_departure (si, s) : (side, sca) -> bool =
 			fst_dep_right.seq = 10 && fst_rest_dep_right.seq = 0
 
 // All the above properties
-function invariant s : sca -> bool = 
+function invariant (s) : sca -> bool = 
 	four_landings (s) &&
 	well_assigned (s) &&
 	non_crowded_sca (s) &&
@@ -760,7 +760,7 @@ Model SATS ()
 	Spec {
 		correctness := AR (x, y, FALSE, atom_correct (y), init);
 //	correctness := AR (x, y, FALSE, TRUE, init);
-	//	emergency := AX (x, AF(y, atom_empty_again (y), x), init);
+		emergency := AX (x, AF(y, atom_empty_again (y), x), init);
 	
 	}
 }

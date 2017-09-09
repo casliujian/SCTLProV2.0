@@ -407,6 +407,6 @@ and prove_fairs cont runtime modul =
 			pre_process_merges (select_sub_fmls (sub_fmls nnf_fml "1"));
 			let b = (prove_fairs (Cont (State_set.empty, List.map (fun e -> (e, State_set.empty)) runtime.model.fairness, "1", (nnf_fml), Basic true, Basic false, [], [])) runtime modul) in
 			 print_endline (s ^ ": " ^ (string_of_bool b)));
-			 State_set.iter (fun s->print_endline (str_value s)) !merge_local;
-			 print_endline (string_of_int (State_set.cardinal !merge_local));
+			 (* State_set.iter (fun s->print_endline (str_value s)) !merge_local; *)
+			 print_endline ("State(s) searched: "^(string_of_int (State_set.cardinal !merge_local)));
 			 prove_lst lst') in prove_lst spec_lst
