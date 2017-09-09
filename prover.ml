@@ -409,4 +409,5 @@ and prove_fairs cont runtime modul =
 			 print_endline (s ^ ": " ^ (string_of_bool b)));
 			 (* State_set.iter (fun s->print_endline (str_value s)) !merge_local; *)
 			 print_endline ("State(s) searched: "^(string_of_int (State_set.cardinal !merge_local)));
+			 merge_local := State_set.empty;
 			 prove_lst lst') in prove_lst spec_lst
