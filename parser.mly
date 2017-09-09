@@ -37,9 +37,9 @@
 %token <int>Int 
 %token <float>Float
 %token <string>Iden UIden
-%token Import Datatype Vertical Value Let Match With Underline Model Next Property If Then Else For In While Do Done
+%token Import Datatype Vertical Value Let Match With Underline Model Next If Then Else For In While Do Done
 %token LB1 RB1 LB2 RB2 LB3 RB3 Equal Non_Equal LT GT LE GE Comma Semicolon Dot DotDot Arrow EOF Add AddDot Minus MinusDot Mult MultDot
-%token Negb Ando Oro And Or Neg LArrow Colon ColonColon Top Bottom AX EX AF EG AR EU True False Function Of State
+%token Negb Ando Oro And Or Neg LArrow Colon ColonColon Top Bottom AX EX AF EG AR EU True False Function
 %token TLst TFloat TAray TInt TBool TUnt At Var Init Transition Atomic Spec Fairness Assigno
 
 %start <(string list) * (Ast.psymbol_tbl) * ((Ast.pkripke_model) option)>program
@@ -64,8 +64,6 @@
 %right Arrow
 %right COLONCOLON
 %left At
-%nonassoc FUN
-
 
 %%
 
@@ -190,12 +188,12 @@ transition_items: e1 = expr_single Colon e2 = expr_single Semicolon {[(e1, e2)]}
     | e1 = expr_single Colon e2 = expr_single Semicolon transition_items {(e1, e2)::$5}
 ;
 
-states: {[]}
+/* states: {[]}
     | State Iden Equal expr_single states {($2, $4)::$5}
-;
+; */
 
-property: Property id = Iden Equal fml = formula  {(id, fml)}
-;
+/* property: Property id = Iden Equal fml = formula  {(id, fml)}
+; */
 
 formula: Top {mk_pformula_loc PTop $startpos($1) $endpos($1)}
     | Bottom {mk_pformula_loc PBottom $startpos($1) $endpos($1)}
@@ -358,7 +356,7 @@ expr_single: expr_path {mk_pexpr_loc (PSymbol $1) (PTVar (new_type_var ())) $sta
     | uid = UIden e = expr_single {
             mk_pexpr_loc (PConstr ((PConstr_compound (uid, e)))) (PTVar (new_type_var ())) $startpos(uid) $endpos(e)
         }
-    | id = Iden LB1 el = separated_nonempty_list(Comma, expr_single) RB1 %prec FUN {
+    | id = Iden LB1 el = separated_nonempty_list(Comma, expr_single) RB1 {
             if List.length el = 1 then
                 let eh:pexpr_loc = List.hd el in
                 mk_pexpr_loc (POp (id, [eh])) (PTVar (new_type_var ())) $startpos(id) $endpos(el)

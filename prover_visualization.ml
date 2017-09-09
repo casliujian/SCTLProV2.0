@@ -365,6 +365,7 @@ let rec prove_model runtime modul visualize_addr =
 		Hashtbl.add state_tbl (get_init_state_in_fml nnf_fml) init_state_id;
 		Hashtbl.add state_struct_tbl init_state_id [];
 		let b = (prove (Cont (State_set.empty, (nnf_fml), 0, "1", (fun () -> Basic true), (fun () -> Basic false))) runtime modul) in
+			print_endline (s^": "^(string_of_bool b));
 			(*print_endline (s ^ " is " ^ (if b then "true, proof output to \""^outname^"\"." else "false, counterexample output to \""^outname^"\".")); *)
 			(*output_result b s sequents (if b then proof else counterexample) out modl.var_list; 
 			output_string out "***********************************ouput complete**************************************";

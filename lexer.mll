@@ -21,7 +21,6 @@ rule token = parse
   | "match"     {Match}
   | "with"      {With}
   | "Model"     {Model}
-  | "property"  {Property}
   | "AX"        {AX}
   | "EX"        {EX}
   | "AF"        {AF}
@@ -43,8 +42,6 @@ rule token = parse
   | "TRUE"      {Top}
   | "FALSE"     {Bottom}
   | "not"       {Neg}
-  | "of"        {Of}
-  | "state"     {State}
   | "next"      {Next}
   | "Var"       {Var}
   | "Init"      {Init}
